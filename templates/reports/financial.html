@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}گزارش مالی - سیستم حسابداری{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('reports') }}">گزارشات</a></li>
+<li class="breadcrumb-item active">گزارش مالی</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-chart-line text-primary"></i>
+                گزارش مالی
+            </h2>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i>
+                    اکسل
+                </button>
+                <button class="btn btn-outline-secondary" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i>
+                    PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">از تاریخ</label>
+                        <input type="date" class="form-control" name="from_date" value="{{ from_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">تا تاریخ</label>
+                        <input type="date" class="form-control" name="to_date" value="{{ to_date }}">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i>
+                            نمایش گزارش
+                        </button>
+                        <a href="{{ url_for('financial_report') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-refresh"></i>
+                            بازنشانی
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-number">{{ "{:,.0f}".format(total_income) }}</div>
+                    <div class="stat-label">کل درآمد (تومان)</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card bg-warning">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-number">{{ "{:,.0f}".format(total_expenses) }}</div>
+                    <div class="stat-label">کل هزینه (تومان)</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card bg-{% if net_profit >= 0 %}success{% else %}danger{% endif %}">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-number">{{ "{:,.0f}".format(net_profit) }}</div>
+                    <div class="stat-label">سود/زیان خالص (تومان)</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-{% if net_profit >= 0 %}plus{% else %}minus{% endif %}"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card bg-info">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-number">{{ "{:.1f}".format(profit_margin) }}%</div>
+                    <div class="stat-label">حاشیه سود</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">نمودار درآمد و هزینه ماهانه</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">توزیع درآمد بر اساس مشتریان</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="customerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Tables -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">درآمدهای ماهانه</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ماه</th>
+                                <th>مبلغ (تومان)</th>
+                                <th>رشد</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in monthly_income %}
+                            <tr>
+                                <td>{{ item.month_name }}</td>
+                                <td>{{ "{:,.0f}".format(item.amount) }}</td>
+                                <td>
+                                    {% if item.growth >= 0 %}
+                                    <span class="text-success">+{{ "{:.1f}".format(item.growth) }}%</span>
+                                    {% else %}
+                                    <span class="text-danger">{{ "{:.1f}".format(item.growth) }}%</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">برترین مشتریان</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>مشتری</th>
+                                <th>مبلغ خرید</th>
+                                <th>درصد</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in top_customers %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ "{:,.0f}".format(customer.total_amount) }}</td>
+                                <td>{{ "{:.1f}".format(customer.percentage) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Monthly Income/Expense Chart
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyChart = new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ monthly_labels | default('[]') | safe }},
+        datasets: [{
+            label: 'درآمد',
+            data: {{ monthly_income_data | default('[]') | safe }},
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            fill: true
+        }, {
+            label: 'هزینه',
+            data: {{ monthly_expense_data | default('[]') | safe }},
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                rtl: true
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' تومان';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Customer Distribution Chart
+const customerCtx = document.getElementById('customerChart').getContext('2d');
+const customerChart = new Chart(customerCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ customer_labels | default('[]') | safe }},
+        datasets: [{
+            data: {{ customer_data | default('[]') | safe }},
+            backgroundColor: [
+                '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1',
+                '#fd7e14', '#20c997', '#e83e8c', '#6c757d', '#17a2b8'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                rtl: true
+            }
+        }
+    }
+});
+
+function exportReport(format) {
+    const params = new URLSearchParams(window.location.search);
+    const url = `/reports/financial/export/${format}?${params.toString()}`;
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

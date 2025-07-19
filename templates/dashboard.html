@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}داشبورد - سیستم حسابداری{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Page Title -->
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-tachometer-alt text-primary"></i>
+            داشبورد مدیریت
+        </h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number">{{ total_orders }}</div>
+                    <div class="stat-label">کل سفارشات</div>
+                </div>
+                <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number">{{ monthly_orders }}</div>
+                    <div class="stat-label">سفارشات ماه جاری</div>
+                </div>
+                <i class="fas fa-calendar fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number">{{ pending_orders }}</div>
+                    <div class="stat-label">سفارشات در انتظار</div>
+                </div>
+                <i class="fas fa-clock fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number">{{ low_stock_products }}</div>
+                    <div class="stat-label">کالاهای کم موجود</div>
+                </div>
+                <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i>
+                    وضعیت مالی
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-3 text-center mb-3">
+                        <h4 class="text-success">{{ "{:,.0f}".format(monthly_revenue) }}</h4>
+                        <small class="text-muted">کل درآمد</small>
+                    </div>
+                    <div class="col-3 text-center mb-3">
+                        <h4 class="text-danger">{{ "{:,.0f}".format(monthly_revenue * 0.7) }}</h4>
+                        <small class="text-muted">کل هزینه</small>
+                    </div>
+                    <div class="col-3 text-center mb-3">
+                        <h4 class="text-primary">{{ "{:,.0f}".format(monthly_revenue * 0.3) }}</h4>
+                        <small class="text-muted">سود/زیان خالص</small>
+                    </div>
+                    <div class="col-3 text-center mb-3">
+                        <h4 class="text-info">30%</h4>
+                        <small class="text-muted">حاشیه سود</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie"></i>
+                    عملکرد کلی
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-shopping-cart"></i>
+                    آخرین سفارشات
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_orders %}
+                    <div class="list-group list-group-flush">
+                        {% for order in recent_orders %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ order.order_number }}</h6>
+                                    <small class="text-muted">{{ order.customer.name }}</small>
+                                </div>
+                                <small class="text-{{ 'success' if order.status == 'completed' else 'warning' if order.status == 'pending' else 'info' }}">
+                                    {% if order.status == 'pending' %}در انتظار{% elif order.status == 'confirmed' %}تایید شده{% elif order.status == 'producing' %}در حال تولید{% elif order.status == 'completed' %}تکمیل شده{% else %}لغو شده{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>سفارشی موجود نیست</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-file-invoice"></i>
+                    آخرین فاکتورها
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_invoices %}
+                    <div class="list-group list-group-flush">
+                        {% for invoice in recent_invoices %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ invoice.invoice_number }}</h6>
+                                    <small class="text-muted">{{ invoice.customer.name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-{{ 'success' if invoice.status == 'paid' else 'warning' if invoice.status == 'sent' else 'danger' if invoice.status == 'overdue' else 'secondary' }}">
+                                        {% if invoice.status == 'draft' %}پیش‌نویس{% elif invoice.status == 'sent' %}ارسال شده{% elif invoice.status == 'paid' %}پرداخت شده{% elif invoice.status == 'overdue' %}معوق{% else %}لغو شده{% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ "{:,.0f}".format(invoice.total_amount) }} تومان</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>فاکتوری موجود نیست</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-money-bill"></i>
+                    آخرین پرداخت‌ها
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_payments %}
+                    <div class="list-group list-group-flush">
+                        {% for payment in recent_payments %}
+                        <div class="list-group-item border-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ payment.payment_number }}</h6>
+                                    <small class="text-muted">{{ payment.customer.name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-success">{{ "{:,.0f}".format(payment.amount) }} تومان</div>
+                                    <small class="text-muted">{{ payment.get_jalali_payment_date() }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>پرداختی موجود نیست</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt"></i>
+                    عملیات سریع
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('add_order') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-plus"></i>
+                            سفارش جدید
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('add_customer') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-user-plus"></i>
+                            مشتری جدید
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('add_product') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-box"></i>
+                            محصول جدید
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{{ url_for('sales_report') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-chart-bar"></i>
+                            گزارش فروش
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Performance Chart
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const performanceChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['تکمیل شده', 'در انتظار', 'در حال تولید'],
+        datasets: [{
+            data: [{{ (total_orders|default(0)) - (pending_orders|default(0)) }}, {{ pending_orders|default(0) }}, {{ monthly_orders|default(0) }}],
+            backgroundColor: [
+                '#28a745',
+                '#ffc107',
+                '#007bff'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

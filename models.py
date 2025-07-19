@@ -1,0 +1,300 @@
+from app import db
+from flask_login import UserMixin
+from datetime import datetime
+import jdatetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import Numeric
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    full_name = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(256))
+    role = db.Column(db.String(32), default='accountant')  # admin, accountant
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def get_jalali_created_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime('%Y/%m/%d')
+    
+    def is_admin(self):
+        return self.role == 'admin'
+    
+    def is_accountant(self):
+        return self.role == 'accountant'
+
+class Customer(db.Model):
+    __tablename__ = 'customers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    company_name = db.Column(db.String(128))
+    phone = db.Column(db.String(20))
+    mobile = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+    address = db.Column(db.Text)
+    national_id = db.Column(db.String(20))
+    tax_id = db.Column(db.String(20))
+    credit_limit = db.Column(Numeric(15, 2), default=0)
+    balance = db.Column(Numeric(15, 2), default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    orders = db.relationship('Order', backref='customer', lazy=True)
+    invoices = db.relationship('Invoice', backref='customer', lazy=True)
+
+class Supplier(db.Model):
+    __tablename__ = 'suppliers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    company_name = db.Column(db.String(128))
+    phone = db.Column(db.String(20))
+    mobile = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+    address = db.Column(db.Text)
+    tax_id = db.Column(db.String(20))
+    account_number = db.Column(db.String(50))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    purchases = db.relationship('Purchase', backref='supplier', lazy=True)
+
+class Product(db.Model):
+    __tablename__ = 'products'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.Text)
+    unit = db.Column(db.String(20), default='عدد')  # واحد اندازه‌گیری
+    category = db.Column(db.String(64))
+    
+    # Box specifications
+    length = db.Column(Numeric(10, 2))  # طول
+    width = db.Column(Numeric(10, 2))   # عرض
+    height = db.Column(Numeric(10, 2))  # ارتفاع
+    material_type = db.Column(db.String(64))  # نوع مواد
+    
+    # Pricing
+    cost_price = db.Column(Numeric(15, 2), default=0)
+    selling_price = db.Column(Numeric(15, 2), default=0)
+    
+    # Inventory
+    current_stock = db.Column(db.Integer, default=0)
+    min_stock_level = db.Column(db.Integer, default=0)
+    max_stock_level = db.Column(db.Integer, default=1000)
+    
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    order_items = db.relationship('OrderItem', backref='product', lazy=True)
+    invoice_items = db.relationship('InvoiceItem', backref='product', lazy=True)
+    stock_movements = db.relationship('StockMovement', backref='product', lazy=True)
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_number = db.Column(db.String(50), unique=True, nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    order_date = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_date = db.Column(db.DateTime)
+    status = db.Column(db.String(32), default='pending')  # pending, confirmed, producing, completed, cancelled
+    
+    # Financial
+    subtotal = db.Column(Numeric(15, 2), default=0)
+    tax_amount = db.Column(Numeric(15, 2), default=0)
+    discount_amount = db.Column(Numeric(15, 2), default=0)
+    total_amount = db.Column(Numeric(15, 2), default=0)
+    
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
+    
+    def get_jalali_order_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.order_date).strftime('%Y/%m/%d')
+        
+    def get_jalali_delivery_date(self):
+        if self.delivery_date:
+            return jdatetime.datetime.fromgregorian(datetime=self.delivery_date).strftime('%Y/%m/%d')
+        return ''
+
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(Numeric(15, 2), nullable=False)
+    discount_percent = db.Column(Numeric(5, 2), default=0)
+    line_total = db.Column(Numeric(15, 2), nullable=False)
+
+class Invoice(db.Model):
+    __tablename__ = 'invoices'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_number = db.Column(db.String(50), unique=True, nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
+    invoice_date = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.DateTime)
+    status = db.Column(db.String(32), default='draft')  # draft, sent, paid, overdue, cancelled
+    
+    # Financial
+    subtotal = db.Column(Numeric(15, 2), default=0)
+    tax_amount = db.Column(Numeric(15, 2), default=0)
+    discount_amount = db.Column(Numeric(15, 2), default=0)
+    total_amount = db.Column(Numeric(15, 2), default=0)
+    paid_amount = db.Column(Numeric(15, 2), default=0)
+    
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('InvoiceItem', backref='invoice', lazy=True, cascade='all, delete-orphan')
+    payments = db.relationship('Payment', backref='invoice', lazy=True)
+    
+    def get_jalali_invoice_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.invoice_date).strftime('%Y/%m/%d')
+        
+    def get_jalali_due_date(self):
+        if self.due_date:
+            return jdatetime.datetime.fromgregorian(datetime=self.due_date).strftime('%Y/%m/%d')
+        return ''
+
+class InvoiceItem(db.Model):
+    __tablename__ = 'invoice_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(Numeric(15, 2), nullable=False)
+    discount_percent = db.Column(Numeric(5, 2), default=0)
+    line_total = db.Column(Numeric(15, 2), nullable=False)
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    payment_number = db.Column(db.String(50), unique=True, nullable=False)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(Numeric(15, 2), nullable=False)
+    payment_method = db.Column(db.String(32))  # cash, check, transfer, card
+    reference_number = db.Column(db.String(100))
+    status = db.Column(db.String(32), default='confirmed')  # pending, confirmed, cancelled
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def get_jalali_payment_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.payment_date).strftime('%Y/%m/%d')
+
+class Purchase(db.Model):
+    __tablename__ = 'purchases'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    purchase_number = db.Column(db.String(50), unique=True, nullable=False)
+    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=False)
+    purchase_date = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_date = db.Column(db.DateTime)
+    status = db.Column(db.String(32), default='pending')  # pending, ordered, received, cancelled
+    
+    # Financial
+    subtotal = db.Column(Numeric(15, 2), default=0)
+    tax_amount = db.Column(Numeric(15, 2), default=0)
+    total_amount = db.Column(Numeric(15, 2), default=0)
+    paid_amount = db.Column(Numeric(15, 2), default=0)
+    
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def get_jalali_purchase_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.purchase_date).strftime('%Y/%m/%d')
+
+class StockMovement(db.Model):
+    __tablename__ = 'stock_movements'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    movement_type = db.Column(db.String(32), nullable=False)  # in, out, adjustment
+    quantity = db.Column(db.Integer, nullable=False)
+    reference_type = db.Column(db.String(32))  # order, invoice, purchase, adjustment
+    reference_id = db.Column(db.Integer)
+    notes = db.Column(db.Text)
+    movement_date = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def get_jalali_movement_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.movement_date).strftime('%Y/%m/%d')
+
+class FinancialAccount(db.Model):
+    __tablename__ = 'financial_accounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    account_code = db.Column(db.String(20), unique=True, nullable=False)
+    account_name = db.Column(db.String(128), nullable=False)
+    account_type = db.Column(db.String(32), nullable=False)  # asset, liability, equity, revenue, expense
+    parent_id = db.Column(db.Integer, db.ForeignKey('financial_accounts.id'))
+    balance = db.Column(Numeric(15, 2), default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Self-referential relationship for account hierarchy
+    children = db.relationship('FinancialAccount', backref=db.backref('parent', remote_side=[id]))
+
+class JournalEntry(db.Model):
+    __tablename__ = 'journal_entries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    entry_number = db.Column(db.String(50), unique=True, nullable=False)
+    entry_date = db.Column(db.DateTime, default=datetime.utcnow)
+    reference_type = db.Column(db.String(32))  # invoice, payment, purchase, adjustment
+    reference_id = db.Column(db.Integer)
+    description = db.Column(db.Text, nullable=False)
+    total_debit = db.Column(Numeric(15, 2), default=0)
+    total_credit = db.Column(Numeric(15, 2), default=0)
+    status = db.Column(db.String(32), default='draft')  # draft, posted, reversed
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    transactions = db.relationship('Transaction', backref='journal_entry', lazy=True, cascade='all, delete-orphan')
+    
+    def get_jalali_entry_date(self):
+        return jdatetime.datetime.fromgregorian(datetime=self.entry_date).strftime('%Y/%m/%d')
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    journal_entry_id = db.Column(db.Integer, db.ForeignKey('journal_entries.id'), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey('financial_accounts.id'), nullable=False)
+    debit_amount = db.Column(Numeric(15, 2), default=0)
+    credit_amount = db.Column(Numeric(15, 2), default=0)
+    description = db.Column(db.Text)
+    
+    # Relationships
+    account = db.relationship('FinancialAccount', backref='transactions')

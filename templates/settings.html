@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}تنظیمات - سیستم حسابداری{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">تنظیمات</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-cog text-primary"></i>
+                تنظیمات سیستم
+            </h2>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">
+        <!-- Settings Menu -->
+        <div class="card">
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="tab">
+                        <i class="fas fa-user"></i> پروفایل کاربری
+                    </a>
+                    <a href="#company" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-building"></i> اطلاعات شرکت
+                    </a>
+                    <a href="#system" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-cogs"></i> تنظیمات سیستم
+                    </a>
+                    <a href="#backup" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-download"></i> پشتیبان‌گیری
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-shield-alt"></i> امنیت
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <!-- Profile Settings -->
+            <div class="tab-pane fade show active" id="profile">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">اطلاعات پروفایل</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('update_profile') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="full_name" class="form-label">نام و نام خانوادگی</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="username" class="form-label">نام کاربری</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" 
+                                           {% if not current_user.is_admin() %}readonly{% endif %}>
+                                    {% if not current_user.is_admin() %}
+                                    <small class="form-text text-muted">تغییر نام کاربری فقط توسط مدیر سیستم امکان‌پذیر است.</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">ایمیل</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره تغییرات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Change Password - Only for Admin -->
+                {% if current_user.is_admin() %}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">تغییر رمز عبور</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('change_password') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="current_password" class="form-label">رمز عبور فعلی</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="new_password" class="form-label">رمز عبور جدید</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="confirm_password" class="form-label">تکرار رمز عبور</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key"></i> تغییر رمز عبور
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">تغییر رمز عبور</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            تغییر رمز عبور فقط توسط مدیر سیستم امکان‌پذیر است.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Company Settings -->
+            <div class="tab-pane fade" id="company">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">اطلاعات شرکت</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('update_company') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_name" class="form-label">نام شرکت</label>
+                                    <input type="text" class="form-control" id="company_name" name="company_name" value="{{ company.name if company else '' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_tax_id" class="form-label">شناسه مالیاتی</label>
+                                    <input type="text" class="form-control" id="company_tax_id" name="company_tax_id" value="{{ company.tax_id if company else '' }}">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="company_address" class="form-label">آدرس شرکت</label>
+                                    <textarea class="form-control" id="company_address" name="company_address" rows="3">{{ company.address if company else '' }}</textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_phone" class="form-label">تلفن</label>
+                                    <input type="text" class="form-control" id="company_phone" name="company_phone" value="{{ company.phone if company else '' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_email" class="form-label">ایمیل</label>
+                                    <input type="email" class="form-control" id="company_email" name="company_email" value="{{ company.email if company else '' }}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره اطلاعات شرکت
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Settings -->
+            <div class="tab-pane fade" id="system">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">تنظیمات عمومی سیستم</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('update_system_settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="currency" class="form-label">واحد پول</label>
+                                    <select class="form-select" id="currency" name="currency">
+                                        <option value="IRR" selected>ریال ایران</option>
+                                        <option value="IRT">تومان ایران</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="date_format" class="form-label">فرمت تاریخ</label>
+                                    <select class="form-select" id="date_format" name="date_format">
+                                        <option value="jalali" selected>تقویم شمسی (جلالی)</option>
+                                    </select>
+                                    <small class="form-text text-muted">فقط تقویم شمسی پشتیبانی می‌شود</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tax_rate" class="form-label">نرخ مالیات (%)</label>
+                                    <input type="number" class="form-control" id="tax_rate" name="tax_rate" value="9" step="0.1" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="fiscal_year_start" class="form-label">شروع سال مالی</label>
+                                    <input type="text" class="form-control" id="fiscal_year_start" name="fiscal_year_start" 
+                                           data-persian-datepicker="true" placeholder="انتخاب تاریخ">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره تنظیمات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Backup Settings -->
+            <div class="tab-pane fade" id="backup">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">مدیریت پشتیبان‌گیری</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>پشتیبان‌گیری دستی</h6>
+                                <p class="text-muted">ایجاد فایل پشتیبان از کل اطلاعات سیستم</p>
+                                <button class="btn btn-success" onclick="createBackup()">
+                                    <i class="fas fa-download"></i> دریافت پشتیبان
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>بازیابی از پشتیبان</h6>
+                                <p class="text-muted">بارگذاری فایل پشتیبان برای بازیابی اطلاعات</p>
+                                <input type="file" class="form-control mb-2" id="backupFile" accept=".sql,.zip">
+                                <button class="btn btn-warning" onclick="restoreBackup()">
+                                    <i class="fas fa-upload"></i> بازیابی
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6>پشتیبان‌گیری خودکار</h6>
+                        <form method="POST" action="{{ url_for('update_backup_settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="auto_backup" class="form-label">پشتیبان‌گیری خودکار</label>
+                                    <select class="form-select" id="auto_backup" name="auto_backup">
+                                        <option value="daily">روزانه</option>
+                                        <option value="weekly" selected>هفتگی</option>
+                                        <option value="monthly">ماهانه</option>
+                                        <option value="disabled">غیرفعال</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="backup_time" class="form-label">زمان پشتیبان‌گیری</label>
+                                    <input type="time" class="form-control" id="backup_time" name="backup_time" value="02:00">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره تنظیمات
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Settings -->
+            <div class="tab-pane fade" id="security">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">تنظیمات امنیتی</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('update_security_settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="session_timeout" class="form-label">مدت انقضای نشست (دقیقه)</label>
+                                    <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="120" min="15" max="480">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="max_login_attempts" class="form-label">حداکثر تلاش ورود ناموفق</label>
+                                    <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="5" min="3" max="10">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="two_factor_auth" name="two_factor_auth">
+                                        <label class="form-check-label" for="two_factor_auth">
+                                            فعال‌سازی احراز هویت دو مرحله‌ای
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="audit_log" name="audit_log" checked>
+                                        <label class="form-check-label" for="audit_log">
+                                            ثبت گزارش فعالیت‌های کاربران
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره تنظیمات امنیتی
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createBackup() {
+    if (confirm('آیا از ایجاد پشتیبان اطمینان دارید؟')) {
+        window.location.href = '{{ url_for("create_backup") }}';
+    }
+}
+
+function restoreBackup() {
+    const fileInput = document.getElementById('backupFile');
+    if (!fileInput.files.length) {
+        alert('لطفاً ابتدا فایل پشتیبان را انتخاب کنید.');
+        return;
+    }
+    
+    if (confirm('هشدار: بازیابی از پشتیبان تمام اطلاعات فعلی را جایگزین خواهد کرد. آیا ادامه می‌دهید؟')) {
+        const formData = new FormData();
+        formData.append('backup_file', fileInput.files[0]);
+        
+        fetch('{{ url_for("restore_backup") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('بازیابی با موفقیت انجام شد. صفحه بازنشانی می‌شود.');
+                location.reload();
+            } else {
+                alert('خطا در بازیابی: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در بازیابی فایل');
+        });
+    }
+}
+</script>
+{% endblock %}

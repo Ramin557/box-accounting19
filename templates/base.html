@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}سیستم حسابداری{% endblock %}</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Persian Date Picker CSS -->
+    <link href="/static/css/persian-datepicker.min.css" rel="stylesheet">
+    <!-- MD Bootstrap Persian DateTime Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/md.bootstrap.persiandatetimepicker@3.1.6/dist/jquery.md.bootstrap.datetimepicker.style.css" />
+    <!-- Custom CSS -->
+    <link href="/static/css/custom.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazir', 'IRANSans', sans-serif;
+            background-color: var(--bs-body-bg, #f8f9fa);
+            color: var(--bs-body-color, #212529);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Dark Mode Support */
+        [data-bs-theme="dark"] {
+            --bs-body-color: #dee2e6;
+            --bs-body-bg: #212529;
+        }
+        
+        [data-bs-theme="dark"] body {
+            background-color: #1a1d20;
+        }
+        
+        [data-bs-theme="dark"] .card {
+            background-color: #2d3142;
+            border-color: #495057;
+        }
+        
+        [data-bs-theme="dark"] .sidebar {
+            background: linear-gradient(135deg, #2d3142 0%, #4f5d75 100%);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #007bff !important;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding-top: 1rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0.2rem 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .sidebar .nav-link i {
+            margin-left: 8px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-card .stat-label {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 1.5rem;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .breadcrumb {
+            background: none;
+            padding: 0;
+        }
+        
+        .breadcrumb-item.active {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="text-center py-3">
+                    <h4 class="text-white">
+                        <i class="fas fa-calculator"></i>
+                        سیستم حسابداری
+                    </h4>
+                </div>
+                
+                {% if current_user.is_authenticated %}
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        داشبورد
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint.startswith('customers') %}active{% endif %}" href="{{ url_for('customers') }}">
+                        <i class="fas fa-users"></i>
+                        مشتریان
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint.startswith('products') %}active{% endif %}" href="{{ url_for('products') }}">
+                        <i class="fas fa-box"></i>
+                        محصولات
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint.startswith('orders') %}active{% endif %}" href="{{ url_for('orders') }}">
+                        <i class="fas fa-shopping-cart"></i>
+                        سفارشات
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint.startswith('invoices') %}active{% endif %}" href="{{ url_for('invoices') }}">
+                        <i class="fas fa-file-invoice"></i>
+                        فاکتورها
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'financial_reports' %}active{% endif %}" href="{{ url_for('financial_reports') }}">
+                        <i class="fas fa-chart-line"></i>
+                        گزارش مالی
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'inventory_reports' %}active{% endif %}" href="{{ url_for('inventory_reports') }}">
+                        <i class="fas fa-warehouse"></i>
+                        گزارش موجودی
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'customer_reports' %}active{% endif %}" href="{{ url_for('customer_reports') }}">
+                        <i class="fas fa-users"></i>
+                        گزارش مشتریان
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'production_reports' %}active{% endif %}" href="{{ url_for('production_reports') }}">
+                        <i class="fas fa-industry"></i>
+                        گزارش تولید
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'tax_reports' %}active{% endif %}" href="{{ url_for('tax_reports') }}">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        گزارش مالیاتی
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'payments' %}active{% endif %}" href="{{ url_for('payments') }}">
+                        <i class="fas fa-credit-card"></i>
+                        دریافت و پرداخت
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'checks' %}active{% endif %}" href="{{ url_for('checks') }}">
+                        <i class="fas fa-money-check"></i>
+                        مدیریت چک‌ها
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'banks' %}active{% endif %}" href="{{ url_for('banks') }}">
+                        <i class="fas fa-university"></i>
+                        حساب‌های بانکی
+                    </a>
+                    
+                    <a class="nav-link {% if request.endpoint == 'budget' %}active{% endif %}" href="{{ url_for('budget') }}">
+                        <i class="fas fa-chart-pie"></i>
+                        بودجه‌بندی
+                    </a>
+                    
+                    <hr class="text-white-50">
+                    
+                    <a class="nav-link" href="{{ url_for('backup') }}">
+                        <i class="fas fa-download"></i>
+                        پشتیبان‌گیری
+                    </a>
+                    
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        خروج
+                    </a>
+                </nav>
+                {% endif %}
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                {% if current_user.is_authenticated %}
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        {% block breadcrumb %}
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">داشبورد</a></li>
+                                {% block breadcrumb_items %}{% endblock %}
+                            </ol>
+                        </nav>
+                        {% endblock %}
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-3">
+                            خوش آمدید، {{ current_user.full_name }}
+                            {% if current_user.is_admin() %}
+                                <span class="badge bg-primary">مدیر</span>
+                            {% else %}
+                                <span class="badge bg-secondary">حسابدار</span>
+                            {% endif %}
+                        </span>
+                        
+                        <!-- Dark Mode Toggle -->
+                        <button class="btn btn-outline-secondary me-2" onclick="toggleDarkMode()" title="حالت تاریک/روشن">
+                            <i class="fas fa-moon" id="darkModeIcon"></i>
+                        </button>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user.is_admin() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('admin_panel') }}"><i class="fas fa-tools"></i> پنل مدیریت</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> تنظیمات</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> خروج</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-4">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {% if category == 'error' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% elif category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Persian Date Picker -->
+    <script src="/static/js/persian-date.min.js"></script>
+    <script src="/static/js/persian-datepicker.min.js"></script>
+    <!-- MD Bootstrap Persian DateTime Picker -->
+    <script src="https://cdn.jsdelivr.net/npm/md.bootstrap.persiandatetimepicker@3.1.6/dist/jquery.md.bootstrap.datetimepicker.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/custom.js"></script>
+    
+    <!-- Prevent MetaMask injection errors -->
+    <script>
+        // Handle unhandled promise rejections from browser extensions
+        window.addEventListener('unhandledrejection', function(event) {
+            // Suppress MetaMask-related errors
+            if (event.reason && (
+                event.reason.message && event.reason.message.includes('MetaMask') ||
+                event.reason.toString().includes('MetaMask') ||
+                event.reason.toString().includes('inpage.js')
+            )) {
+                event.preventDefault();
+                console.log('Suppressed MetaMask extension error (not related to accounting system)');
+            }
+        });
+        
+        // Prevent MetaMask from trying to inject into our accounting system
+        if (typeof window.ethereum !== 'undefined') {
+            console.log('MetaMask detected - accounting system will function normally');
+        }
+        
+        // Dark Mode Toggle Function
+        function toggleDarkMode() {
+            const htmlElement = document.documentElement;
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.getElementById('darkModeIcon');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            
+            const icon = document.getElementById('darkModeIcon');
+            if (icon) {
+                icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

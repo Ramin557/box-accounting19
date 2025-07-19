@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}گزارش موجودی - سیستم حسابداری{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">گزارش موجودی</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-warehouse text-primary"></i>
+                گزارش موجودی انبار
+            </h2>
+            <div>
+                <button class="btn btn-success" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i> اکسل
+                </button>
+                <button class="btn btn-danger" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">کل محصولات</h5>
+                        <h4 class="mb-0">۱۲۳</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">ارزش کل موجودی</h5>
+                        <h4 class="mb-0">۱۲۰,۰۰۰,۰۰۰ <small>تومان</small></h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">کمبود موجودی</h5>
+                        <h4 class="mb-0">۸</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">موجودی صفر</h5>
+                        <h4 class="mb-0">۳</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter"></i>
+                    فیلتر گزارش
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="category" class="form-label">دسته‌بندی</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">همه دسته‌ها</option>
+                                <option value="جعبه‌های کوچک">جعبه‌های کوچک</option>
+                                <option value="جعبه‌های متوسط">جعبه‌های متوسط</option>
+                                <option value="جعبه‌های بزرگ">جعبه‌های بزرگ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="stock_status" class="form-label">وضعیت موجودی</label>
+                            <select class="form-select" id="stock_status" name="stock_status">
+                                <option value="">همه وضعیت‌ها</option>
+                                <option value="in_stock">موجود</option>
+                                <option value="low_stock">کمبود</option>
+                                <option value="out_of_stock">ناموجود</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="min_value" class="form-label">حداقل ارزش</label>
+                            <input type="number" class="form-control" id="min_value" name="min_value" placeholder="تومان">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="max_value" class="form-label">حداکثر ارزش</label>
+                            <input type="number" class="form-control" id="max_value" name="max_value" placeholder="تومان">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> اعمال فیلتر
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> پاک کردن
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i>
+                    گزارش تفصیلی موجودی
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>کد محصول</th>
+                                <th>نام محصول</th>
+                                <th>دسته‌بندی</th>
+                                <th>موجودی فعلی</th>
+                                <th>حداقل موجودی</th>
+                                <th>قیمت خرید</th>
+                                <th>قیمت فروش</th>
+                                <th>ارزش کل</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>BOX001</td>
+                                <td>جعبه کوچک ۲۰×۱۵×۱۰</td>
+                                <td>جعبه‌های کوچک</td>
+                                <td>۱۰۰</td>
+                                <td>۲۰</td>
+                                <td>۵,۰۰۰</td>
+                                <td>۸,۰۰۰</td>
+                                <td>۵۰۰,۰۰۰</td>
+                                <td><span class="badge bg-success">موجود</span></td>
+                            </tr>
+                            <tr>
+                                <td>BOX002</td>
+                                <td>جعبه متوسط ۳۰×۲۵×۲۰</td>
+                                <td>جعبه‌های متوسط</td>
+                                <td>۵۰</td>
+                                <td>۱۰</td>
+                                <td>۱۲,۰۰۰</td>
+                                <td>۱۸,۰۰۰</td>
+                                <td>۶۰۰,۰۰۰</td>
+                                <td><span class="badge bg-success">موجود</span></td>
+                            </tr>
+                            <tr>
+                                <td>BOX003</td>
+                                <td>جعبه بزرگ ۵۰×۴۰×۳۰</td>
+                                <td>جعبه‌های بزرگ</td>
+                                <td>۲۵</td>
+                                <td>۵</td>
+                                <td>۲۵,۰۰۰</td>
+                                <td>۳۵,۰۰۰</td>
+                                <td>۶۲۵,۰۰۰</td>
+                                <td><span class="badge bg-success">موجود</span></td>
+                            </tr>
+                            <tr>
+                                <td>BOX004</td>
+                                <td>جعبه ویژه ۴۰×۳۰×۲۵</td>
+                                <td>جعبه‌های ویژه</td>
+                                <td>۳</td>
+                                <td>۱۰</td>
+                                <td>۲۰,۰۰۰</td>
+                                <td>۳۰,۰۰۰</td>
+                                <td>۶۰,۰۰۰</td>
+                                <td><span class="badge bg-warning">کمبود</span></td>
+                            </tr>
+                            <tr>
+                                <td>BOX005</td>
+                                <td>جعبه صنعتی ۶۰×۵۰×۴۰</td>
+                                <td>جعبه‌های صنعتی</td>
+                                <td>۰</td>
+                                <td>۵</td>
+                                <td>۴۰,۰۰۰</td>
+                                <td>۵۵,۰۰۰</td>
+                                <td>۰</td>
+                                <td><span class="badge bg-danger">ناموجود</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">قبلی</a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link" href="#">۱</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">۲</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">۳</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">بعدی</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportReport(format) {
+    if (format === 'excel') {
+        alert('گزارش اکسل در حال آماده‌سازی است...');
+        // Here you would implement Excel export
+    } else if (format === 'pdf') {
+        alert('گزارش PDF در حال آماده‌سازی است...');
+        // Here you would implement PDF export
+    }
+}
+</script>
+{% endblock %}
