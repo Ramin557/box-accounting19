@@ -4,7 +4,7 @@
  */
 
 // ===== 1. Back Button Functionality =====
-class BackButtonManager {
+class AccountingBackButtonManager {
     constructor() {
         this.init();
     }
@@ -135,7 +135,7 @@ class BackButtonManager {
 }
 
 // ===== 2. Persian Calendar Integration =====
-class PersianCalendarManager {
+class AccountingPersianCalendarManager {
     constructor() {
         this.init();
     }
@@ -432,7 +432,7 @@ class PersianCalendarManager {
 }
 
 // ===== 3. Currency Formatting Manager =====
-class CurrencyFormatter {
+class AccountingCurrencyFormatter {
     constructor() {
         this.defaultCurrency = 'ریال';
         this.init();
@@ -585,17 +585,21 @@ class CurrencyFormatter {
 
 // ===== Auto-initialization =====
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all managers
-    window.backButtonManager = new BackButtonManager();
-    window.persianCalendarManager = new PersianCalendarManager();
-    window.currencyFormatter = new CurrencyFormatter();
-    
-    console.log('UI Enhancements initialized successfully');
+    try {
+        // Initialize all managers
+        window.backButtonManager = new AccountingBackButtonManager();
+        window.persianCalendarManager = new AccountingPersianCalendarManager();
+        window.currencyFormatter = new AccountingCurrencyFormatter();
+        
+        console.log('UI Enhancements initialized successfully');
+    } catch (error) {
+        console.error('Error initializing UI enhancements:', error);
+    }
 });
 
 // Global helper functions
 window.formatCurrency = (amount, currency = 'ریال') => {
-    return CurrencyFormatter.format(amount, currency);
+    return AccountingCurrencyFormatter.format(amount, currency);
 };
 
 window.goBack = () => {

@@ -19,7 +19,7 @@
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number">{{ total_orders }}</div>
+                    <div class="stat-number" data-stat="total_orders">{{ total_orders }}</div>
                     <div class="stat-label">کل سفارشات</div>
                 </div>
                 <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
@@ -31,7 +31,7 @@
         <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number">{{ monthly_orders }}</div>
+                    <div class="stat-number" data-stat="monthly_orders">{{ monthly_orders }}</div>
                     <div class="stat-label">سفارشات ماه جاری</div>
                 </div>
                 <i class="fas fa-calendar fa-2x opacity-50"></i>
@@ -43,7 +43,7 @@
         <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number">{{ pending_orders }}</div>
+                    <div class="stat-number" data-stat="pending_orders">{{ pending_orders }}</div>
                     <div class="stat-label">سفارشات در انتظار</div>
                 </div>
                 <i class="fas fa-clock fa-2x opacity-50"></i>
@@ -55,7 +55,7 @@
         <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number">{{ low_stock_products }}</div>
+                    <div class="stat-number" data-stat="low_stock_products">{{ low_stock_products }}</div>
                     <div class="stat-label">کالاهای کم موجود</div>
                 </div>
                 <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
@@ -64,13 +64,144 @@
     </div>
 </div>
 
-<!-- Financial Overview -->
+<!-- Enhanced Financial Cards -->
+<div class="row mt-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number" data-stat="monthly_revenue">{{ "{:,.0f}".format(monthly_revenue) }}</div>
+                    <div class="stat-label">درآمد ماه جاری (تومان)</div>
+                    {% if revenue_growth != 0 %}
+                    <div class="small text-light mt-1">
+                        <i class="fas fa-{{ 'arrow-up' if revenue_growth > 0 else 'arrow-down' }}"></i>
+                        {{ "{:.1f}".format(abs(revenue_growth)) }}% نسبت به ماه قبل
+                    </div>
+                    {% endif %}
+                </div>
+                <i class="fas fa-coins fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number" data-stat="outstanding_invoices">{{ "{:,.0f}".format(outstanding_invoices) }}</div>
+                    <div class="stat-label">مطالبات معوق (تومان)</div>
+                </div>
+                <i class="fas fa-exclamation-circle fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number" data-stat="total_customers">{{ total_customers }}</div>
+                    <div class="stat-label">تعداد مشتریان</div>
+                </div>
+                <i class="fas fa-users fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-number" data-stat="total_products">{{ total_products }}</div>
+                    <div class="stat-label">تعداد محصولات</div>
+                </div>
+                <i class="fas fa-box fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Charts Section -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line text-primary"></i>
+                    نمودار درآمد روزانه (7 روز گذشته)
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshDailyRevenue()">
+                    <i class="fas fa-sync-alt"></i>
+                    به‌روزرسانی
+                </button>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyRevenueChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie text-success"></i>
+                    وضعیت سفارشات ماه جاری
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Products and Analytics -->
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-trophy text-warning"></i>
+                    پرفروش‌ترین محصولات (30 روز گذشته)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                    <div class="row">
+                        <div class="col-12">
+                            <canvas id="topProductsChart" style="height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        {% for product in top_products %}
+                        <div class="col-12 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">{{ product.name }}</span>
+                                <span class="badge bg-primary">{{ product.total_sold }} عدد</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-gradient" style="width: {{ (product.total_sold / top_products[0].total_sold * 100) if top_products else 0 }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <p>هنوز داده‌ای برای نمایش موجود نیست</p>
+                        <small>پس از ثبت سفارشات، آمار محصولات در اینجا نمایش داده می‌شود</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area text-info"></i>
                     وضعیت مالی
                 </h5>
             </div>
@@ -267,37 +398,171 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.list-group-item {
+    border: none !important;
+    padding: 15px;
+    transition: background-color 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 15px;
+    }
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard Data for JavaScript -->
 <script>
-// Performance Chart
-const ctx = document.getElementById('performanceChart').getContext('2d');
-const performanceChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-        labels: ['تکمیل شده', 'در انتظار', 'در حال تولید'],
-        datasets: [{
-            data: [{{ (total_orders|default(0)) - (pending_orders|default(0)) }}, {{ pending_orders|default(0) }}, {{ monthly_orders|default(0) }}],
-            backgroundColor: [
-                '#28a745',
-                '#ffc107',
-                '#007bff'
-            ],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    usePointStyle: true
-                }
+window.dashboardData = {
+    dailyRevenue: {{ daily_revenue|tojson if daily_revenue is defined else '[]' }},
+    orderStatus: {{ order_status_data|tojson if order_status_data is defined else '[]' }},
+    topProducts: {{ top_products|tojson if top_products is defined else '[]' }}
+};
+</script>
+
+<!-- Dashboard Charts Script -->
+<script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
+
+<!-- Live Statistics Update -->
+<script>
+class LiveStats {
+    constructor() {
+        this.updateInterval = 60000; // 1 minute
+        this.init();
+    }
+
+    init() {
+        setInterval(() => this.updateStats(), this.updateInterval);
+    }
+
+    async updateStats() {
+        try {
+            const response = await fetch('/api/live-stats');
+            if (response.ok) {
+                const data = await response.json();
+                this.updateStatCards(data);
             }
+        } catch (error) {
+            console.log('Stats update failed:', error);
         }
     }
+
+    updateStatCards(data) {
+        // Update stat numbers with animation
+        Object.keys(data).forEach(key => {
+            const element = document.querySelector(`[data-stat="${key}"]`);
+            if (element) {
+                this.animateNumber(element, parseInt(element.textContent.replace(/,/g, '')), data[key]);
+            }
+        });
+    }
+
+    animateNumber(element, start, end) {
+        const duration = 1000;
+        const startTime = Date.now();
+        
+        const updateNumber = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current.toLocaleString('fa-IR');
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateNumber);
+            }
+        };
+        
+        requestAnimationFrame(updateNumber);
+    }
+}
+
+// Initialize live stats
+document.addEventListener('DOMContentLoaded', function() {
+    new LiveStats();
 });
 </script>
 {% endblock %}

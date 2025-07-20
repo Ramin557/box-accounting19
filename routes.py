@@ -76,6 +76,57 @@ def dashboard():
     recent_invoices = Invoice.query.order_by(Invoice.created_at.desc()).limit(5).all()
     recent_payments = Payment.query.order_by(Payment.created_at.desc()).limit(5).all()
     
+    # Additional counts
+    total_customers = Customer.query.count()
+    total_products = Product.query.count()
+    
+    # Top selling products (last 30 days)
+    thirty_days_ago = today - timedelta(days=30)
+    top_products = db.session.query(
+        Product.name,
+        func.sum(OrderItem.quantity).label('total_sold')
+    ).join(OrderItem).join(Order).filter(
+        Order.order_date >= thirty_days_ago
+    ).group_by(Product.id, Product.name).order_by(
+        func.sum(OrderItem.quantity).desc()
+    ).limit(5).all()
+    
+    # Daily revenue chart data (last 7 days)
+    daily_revenue = []
+    for i in range(7):
+        date = today - timedelta(days=i)
+        day_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+            and_(
+                func.date(Invoice.invoice_date) == date.date(),
+                Invoice.status == 'paid'
+            )
+        ).scalar() or 0
+        daily_revenue.append({
+            'date': jdatetime.date.fromgregorian(date=date.date()).strftime('%Y/%m/%d'),
+            'revenue': float(day_revenue)
+        })
+    daily_revenue.reverse()  # Show oldest to newest
+    
+    # Monthly order status distribution
+    order_status_data = db.session.query(
+        Order.status,
+        func.count(Order.id).label('count')
+    ).filter(Order.order_date >= current_month_start).group_by(Order.status).all()
+    
+    # Monthly revenue vs last month comparison
+    last_month_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+    last_month_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+        and_(
+            Invoice.invoice_date >= last_month_start,
+            Invoice.invoice_date < current_month_start,
+            Invoice.status == 'paid'
+        )
+    ).scalar() or 0
+    
+    revenue_growth = 0
+    if last_month_revenue > 0:
+        revenue_growth = ((monthly_revenue - last_month_revenue) / last_month_revenue) * 100
+    
     return render_template('dashboard.html',
                          total_orders=total_orders,
                          monthly_orders=monthly_orders,
@@ -85,7 +136,131 @@ def dashboard():
                          low_stock_products=low_stock_products,
                          recent_orders=recent_orders,
                          recent_invoices=recent_invoices,
-                         recent_payments=recent_payments)
+                         recent_payments=recent_payments,
+                         top_products=top_products,
+                         daily_revenue=daily_revenue,
+                         order_status_data=order_status_data,
+                         revenue_growth=revenue_growth,
+                         last_month_revenue=last_month_revenue,
+                         total_customers=total_customers,
+                         total_products=total_products)
+
+@app.route('/api/dashboard-data')
+@login_required
+def api_dashboard_data():
+    """API endpoint for dashboard chart data"""
+    try:
+        # Get current date info
+        today = jdatetime.datetime.now()
+        current_month_start = today.replace(day=1).togregorian()
+        today = today.togregorian()
+        thirty_days_ago = today - timedelta(days=30)
+        
+        # Daily revenue data (last 7 days)
+        daily_revenue = []
+        for i in range(7):
+            date = today - timedelta(days=i)
+            day_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+                and_(
+                    func.date(Invoice.invoice_date) == date.date(),
+                    Invoice.status == 'paid'
+                )
+            ).scalar() or 0
+            daily_revenue.append({
+                'date': jdatetime.date.fromgregorian(date=date.date()).strftime('%Y/%m/%d'),
+                'revenue': float(day_revenue)
+            })
+        daily_revenue.reverse()
+        
+        # Order status distribution
+        order_status = []
+        status_data = db.session.query(
+            Order.status,
+            func.count(Order.id).label('count')
+        ).filter(Order.order_date >= current_month_start).group_by(Order.status).all()
+        
+        for status, count in status_data:
+            order_status.append({
+                'status': status,
+                'count': count
+            })
+        
+        # Top selling products
+        top_products = []
+        products_data = db.session.query(
+            Product.name,
+            func.sum(OrderItem.quantity).label('total_sold')
+        ).join(OrderItem).join(Order).filter(
+            Order.order_date >= thirty_days_ago
+        ).group_by(Product.id, Product.name).order_by(
+            func.sum(OrderItem.quantity).desc()
+        ).limit(5).all()
+        
+        for product_name, total_sold in products_data:
+            top_products.append({
+                'name': product_name,
+                'total_sold': int(total_sold)
+            })
+        
+        return jsonify({
+            'dailyRevenue': daily_revenue,
+            'orderStatus': order_status,
+            'topProducts': top_products,
+            'success': True
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
+
+@app.route('/api/live-stats')
+@login_required  
+def api_live_stats():
+    """API endpoint for live statistics updates"""
+    try:
+        today = jdatetime.datetime.now()
+        current_month_start = today.replace(day=1).togregorian()
+        today = today.togregorian()
+        
+        # Calculate live statistics
+        total_orders = Order.query.count()
+        monthly_orders = Order.query.filter(Order.order_date >= current_month_start).count()
+        pending_orders = Order.query.filter_by(status='pending').count()
+        
+        monthly_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+            and_(Invoice.invoice_date >= current_month_start, Invoice.status == 'paid')
+        ).scalar() or 0
+        
+        outstanding_invoices = db.session.query(func.sum(Invoice.total_amount - Invoice.paid_amount)).filter(
+            Invoice.status.in_(['sent', 'overdue'])
+        ).scalar() or 0
+        
+        low_stock_products = Product.query.filter(
+            Product.current_stock <= Product.min_stock_level
+        ).count()
+        
+        total_customers = Customer.query.count()
+        total_products = Product.query.count()
+        
+        return jsonify({
+            'total_orders': total_orders,
+            'monthly_orders': monthly_orders,
+            'pending_orders': pending_orders,
+            'monthly_revenue': float(monthly_revenue),
+            'outstanding_invoices': float(outstanding_invoices),
+            'low_stock_products': low_stock_products,
+            'total_customers': total_customers,
+            'total_products': total_products,
+            'success': True
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
 
 # Customer Management Routes
 @app.route('/customers')

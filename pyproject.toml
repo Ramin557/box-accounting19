@@ -14,4 +14,6 @@ dependencies = [
     "jdatetime",
     "psycopg2-binary",
     "sqlalchemy>=2.0.41",
+    "python-dotenv>=1.1.1",
+    "flask-migrate>=4.1.0",
 ]
