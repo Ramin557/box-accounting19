@@ -121,8 +121,15 @@
 }
 
 .dark-mode .sidebar {
-    background-color: #1e1e1e !important;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%) !important;
     border-color: #333333 !important;
+    min-height: 100vh !important;
+}
+
+/* Ensure sidebar bottom also gets the gradient */
+.dark-mode .sidebar-bottom {
+    background: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .dark-mode .nav-link {

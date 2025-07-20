@@ -240,6 +240,9 @@ class DarkModeManager {
         const sunIcon = toggleBtn.querySelector('.sun-icon');
         const moonIcon = toggleBtn.querySelector('.moon-icon');
         
+        // Check if icons exist before accessing their style
+        if (!sunIcon || !moonIcon) return;
+        
         if (this.isDarkMode) {
             toggleBtn.setAttribute('title', 'تغییر به حالت روشن (Ctrl+Shift+D)');
             sunIcon.style.opacity = '1';

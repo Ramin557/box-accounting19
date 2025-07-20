@@ -10,7 +10,7 @@ let darkMode = localStorage.getItem('darkMode') === 'true';
  * Initialize all components when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDarkMode();
+    // Remove initializeDarkMode() call to avoid conflict with dark-mode.js
     initializePersianDatePickers();
     setupFormValidation();
     initializeDropdowns();

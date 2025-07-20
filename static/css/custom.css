@@ -458,11 +458,7 @@ body, .container, h4, .btn, .list li, .card, .navbar, .table, .form-control, .fo
     height: 100vh;
 }
 
-.sidebar-bottom {
-    margin-top: auto;
-    background: rgba(0, 0, 0, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
+
 
 .dark-mode small {
     color: #9ca3af !important;
@@ -546,11 +542,17 @@ body {
 
 /* Fix for sidebar alignment */
 .sidebar {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white;
     padding-top: 1rem;
     float: right;
+}
+
+.sidebar-bottom {
+    background: transparent !important;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Fix for main content alignment */
@@ -562,12 +564,136 @@ body {
 /* Fix for stat cards alignment */
 .stat-card {
     text-align: right;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    color: #495057;
+}
+
+/* Dark mode stat cards */
+.dark-mode .stat-card {
+    background: linear-gradient(135deg, #4a5568, #2d3748) !important;
+    color: #f7fafc !important;
+    border: 1px solid #60a5fa;
+}
+
+.dark-mode .stat-number {
+    color: #f7fafc !important;
+    font-weight: bold;
+}
+
+.dark-mode .stat-label {
+    color: #e2e8f0 !important;
+    opacity: 0.9;
+}
+
+/* Dark mode cards */
+.dark-mode .card {
+    background: linear-gradient(135deg, #2d3748 0%, #374151 100%) !important;
+    border: 1px solid #4a5568 !important;
+    color: #f7fafc !important;
+}
+
+.dark-mode .card-header {
+    background: linear-gradient(135deg, #374151 0%, #4a5568 100%) !important;
+    border-bottom: 1px solid #6b7280 !important;
+    color: #f7fafc !important;
+    font-weight: 600;
+}
+
+.dark-mode .card-body {
+    color: #f7fafc !important;
+}
+
+.dark-mode .card h5, .dark-mode .card h6 {
+    color: #f7fafc !important;
+}
+
+.dark-mode .card .text-muted {
+    color: #a0aec0 !important;
+}
+
+.dark-mode .card-text {
+    color: #e2e8f0 !important;
+}
+
+/* Dark mode financial status card */
+.dark-mode .card[style*="border: 2px solid #dc3545"] {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
+    border: 2px solid #e53e3e !important;
+}
+
+.dark-mode .card-header[style*="background: linear-gradient(135deg, #dc3545"] {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+    color: white !important;
+}
+
+/* Dark mode progress bars */
+.dark-mode .progress {
+    background-color: #4a5568 !important;
+}
+
+.dark-mode .text-success {
+    color: #68d391 !important;
+}
+
+.dark-mode .text-danger {
+    color: #fc8181 !important;
 }
 
 /* Fix for dashboard cards */
 .card {
     text-align: right;
     margin-bottom: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    color: #212529;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    color: #212529;
+    font-weight: 600;
+}
+
+.card-body {
+    color: #212529;
+}
+
+.card h5, .card h6 {
+    color: #212529;
+}
+
+.card .text-muted {
+    color: #6c757d !important;
 }
 
 /* Fix for navbar alignment */
