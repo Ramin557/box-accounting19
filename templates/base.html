@@ -12,11 +12,19 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Persian Date Picker CSS -->
-    <link href="/static/css/persian-datepicker.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css" rel="stylesheet">
     <!-- MD Bootstrap Persian DateTime Picker -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/md.bootstrap.persiandatetimepicker@3.1.6/dist/jquery.md.bootstrap.datetimepicker.style.css" />
+    <!-- HTML2PDF Library for enhanced PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Custom CSS -->
     <link href="/static/css/custom.css" rel="stylesheet">
+    <!-- Dark Mode CSS -->
+    <link href="/static/css/dark-mode.css" rel="stylesheet">
+    <!-- Custom Select Component CSS -->
+    <link href="/static/css/custom-select.css" rel="stylesheet">
+    <!-- UI Enhancements CSS (Back Button, Persian Calendar, Currency) -->
+    <link href="/static/css/ui-enhancements.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Vazir', 'IRANSans', sans-serif;
@@ -192,11 +200,13 @@
                 
                 {% if current_user.is_authenticated %}
                 <nav class="nav flex-column">
+                    <!-- داشبورد -->
                     <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="fas fa-tachometer-alt"></i>
                         داشبورد
                     </a>
                     
+                    <!-- مدیریت اطلاعات پایه -->
                     <a class="nav-link {% if request.endpoint.startswith('customers') %}active{% endif %}" href="{{ url_for('customers') }}">
                         <i class="fas fa-users"></i>
                         مشتریان
@@ -207,6 +217,7 @@
                         محصولات
                     </a>
                     
+                    <!-- عملیات تجاری -->
                     <a class="nav-link {% if request.endpoint.startswith('orders') %}active{% endif %}" href="{{ url_for('orders') }}">
                         <i class="fas fa-shopping-cart"></i>
                         سفارشات
@@ -217,63 +228,57 @@
                         فاکتورها
                     </a>
                     
-                    <a class="nav-link {% if request.endpoint == 'financial_reports' %}active{% endif %}" href="{{ url_for('financial_reports') }}">
+                    <!-- گزارشات -->
+                    <a class="nav-link {% if request.endpoint.startswith('reports') %}active{% endif %}" href="{{ url_for('reports') }}">
                         <i class="fas fa-chart-line"></i>
-                        گزارش مالی
+                        گزارشات
                     </a>
                     
-                    <a class="nav-link {% if request.endpoint == 'inventory_reports' %}active{% endif %}" href="{{ url_for('inventory_reports') }}">
-                        <i class="fas fa-warehouse"></i>
-                        گزارش موجودی
-                    </a>
+                    <!-- RBAC Management (for users with appropriate permissions) -->
+                    {% if has_permission('manage_users') or has_permission('manage_roles') %}
+                    <hr class="text-white-50">
+                    <div class="px-3 py-2">
+                        <small class="text-white-50">مدیریت دسترسی</small>
+                    </div>
                     
-                    <a class="nav-link {% if request.endpoint == 'customer_reports' %}active{% endif %}" href="{{ url_for('customer_reports') }}">
-                        <i class="fas fa-users"></i>
-                        گزارش مشتریان
+                    {% if has_permission('manage_users') %}
+                    <a class="nav-link {% if request.endpoint.startswith('rbac_users') %}active{% endif %}" href="{{ url_for('rbac_users') }}">
+                        <i class="fas fa-users-cog"></i>
+                        مدیریت کاربران
                     </a>
+                    {% endif %}
                     
-                    <a class="nav-link {% if request.endpoint == 'production_reports' %}active{% endif %}" href="{{ url_for('production_reports') }}">
-                        <i class="fas fa-industry"></i>
-                        گزارش تولید
+                    {% if has_permission('manage_roles') %}
+                    <a class="nav-link {% if request.endpoint.startswith('rbac_roles') %}active{% endif %}" href="{{ url_for('rbac_roles') }}">
+                        <i class="fas fa-user-shield"></i>
+                        نقش‌ها و دسترسی‌ها
                     </a>
-                    
-                    <a class="nav-link {% if request.endpoint == 'tax_reports' %}active{% endif %}" href="{{ url_for('tax_reports') }}">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        گزارش مالیاتی
-                    </a>
-                    
-                    <a class="nav-link {% if request.endpoint == 'payments' %}active{% endif %}" href="{{ url_for('payments') }}">
-                        <i class="fas fa-credit-card"></i>
-                        دریافت و پرداخت
-                    </a>
-                    
-                    <a class="nav-link {% if request.endpoint == 'checks' %}active{% endif %}" href="{{ url_for('checks') }}">
-                        <i class="fas fa-money-check"></i>
-                        مدیریت چک‌ها
-                    </a>
-                    
-                    <a class="nav-link {% if request.endpoint == 'banks' %}active{% endif %}" href="{{ url_for('banks') }}">
-                        <i class="fas fa-university"></i>
-                        حساب‌های بانکی
-                    </a>
-                    
-                    <a class="nav-link {% if request.endpoint == 'budget' %}active{% endif %}" href="{{ url_for('budget') }}">
-                        <i class="fas fa-chart-pie"></i>
-                        بودجه‌بندی
-                    </a>
+                    {% endif %}
+                    {% endif %}
                     
                     <hr class="text-white-50">
                     
-                    <a class="nav-link" href="{{ url_for('backup') }}">
-                        <i class="fas fa-download"></i>
-                        پشتیبان‌گیری
+                    <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
+                        <i class="fas fa-cog"></i>
+                        تنظیمات
                     </a>
                     
-                    <a class="nav-link" href="{{ url_for('logout') }}">
-                        <i class="fas fa-sign-out-alt"></i>
-                        خروج
-                    </a>
                 </nav>
+                
+                <!-- Bottom Navigation -->
+                <div class="sidebar-bottom mt-auto p-3">
+                    <!-- Dark Mode Toggle -->
+                    <div class="text-center mb-2">
+                        <button id="darkModeToggle" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-moon"></i> حالت تاریک
+                        </button>
+                    </div>
+                    
+                    <!-- Logout -->
+                    <a class="nav-link text-center" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> خروج
+                    </a>
+                </div>
                 {% endif %}
             </div>
             
@@ -296,17 +301,10 @@
                     <div class="d-flex align-items-center">
                         <span class="text-muted me-3">
                             خوش آمدید، {{ current_user.full_name }}
-                            {% if current_user.is_admin() %}
-                                <span class="badge bg-primary">مدیر</span>
-                            {% else %}
-                                <span class="badge bg-secondary">حسابدار</span>
-                            {% endif %}
+                            <span class="badge bg-primary">{{ current_user.get_role_display_name() }}</span>
                         </span>
                         
-                        <!-- Dark Mode Toggle -->
-                        <button class="btn btn-outline-secondary me-2" onclick="toggleDarkMode()" title="حالت تاریک/روشن">
-                            <i class="fas fa-moon" id="darkModeIcon"></i>
-                        </button>
+
                         
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -316,6 +314,19 @@
                                 {% if current_user.is_admin() %}
                                     <li><a class="dropdown-item" href="{{ url_for('admin_panel') }}"><i class="fas fa-tools"></i> پنل مدیریت</a></li>
                                 {% endif %}
+                                
+                                {% if has_permission('manage_users') or has_permission('manage_roles') %}
+                                    <li><h6 class="dropdown-header">مدیریت دسترسی</h6></li>
+                                    {% if has_permission('manage_users') %}
+                                        <li><a class="dropdown-item" href="{{ url_for('rbac_users') }}"><i class="fas fa-users-cog"></i> کاربران</a></li>
+                                    {% endif %}
+                                    {% if has_permission('manage_roles') %}
+                                        <li><a class="dropdown-item" href="{{ url_for('rbac_roles') }}"><i class="fas fa-user-shield"></i> نقش‌ها</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('rbac_permissions') }}"><i class="fas fa-key"></i> دسترسی‌ها</a></li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                
                                 <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> تنظیمات</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> خروج</a></li>
@@ -354,17 +365,29 @@
         </div>
     </div>
     
+    <!-- jQuery (required for Persian DateTime Picker) -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js for reports -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Persian Date Picker -->
-    <script src="/static/js/persian-date.min.js"></script>
-    <script src="/static/js/persian-datepicker.min.js"></script>
-    <!-- MD Bootstrap Persian DateTime Picker -->
-    <script src="https://cdn.jsdelivr.net/npm/md.bootstrap.persiandatetimepicker@3.1.6/dist/jquery.md.bootstrap.datetimepicker.js"></script>
+    <!-- Chart.js for reports (specific version to avoid source map issues) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Persian Date Support -->
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
     <!-- Custom JS -->
     <script src="/static/js/custom.js"></script>
+    <!-- PDF Export functionality -->
+    <script src="/static/js/pdf-export.js"></script>
+    <!-- Enhanced Forms functionality -->
+    <script src="/static/js/enhanced-forms.js"></script>
+    <!-- Dynamic Dark Mode Switcher -->
+    <script src="/static/js/dark-mode.js"></script>
+    <!-- Custom Select Component -->
+    <script src="/static/js/custom-select.js"></script>
+    <!-- UI Enhancements (Back Button, Persian Calendar, Currency Formatting) -->
+    <script src="/static/js/ui-enhancements.js"></script>
+    <!-- UI Enhancements (Back Button, Persian Calendar, Currency Formatting) -->
+    <script src="/static/js/ui-enhancements.js"></script>
     
     <!-- Prevent MetaMask injection errors -->
     <script>

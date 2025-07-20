@@ -15,10 +15,16 @@
                 <i class="fas fa-users text-primary"></i>
                 مدیریت مشتریان
             </h2>
-            <a href="{{ url_for('add_customer') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                مشتری جدید
-            </a>
+            <div class="btn-group">
+                <a href="{{ url_for('add_customer') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    مشتری جدید
+                </a>
+                <button type="button" class="btn btn-outline-danger" onclick="exportTablePDF(this)" title="صادرات لیست مشتریان">
+                    <i class="fas fa-file-pdf"></i>
+                    صادرات PDF
+                </button>
+            </div>
         </div>
     </div>
 </div>

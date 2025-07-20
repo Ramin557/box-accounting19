@@ -1,60 +1,95 @@
-// Custom JavaScript for fixing functionality issues
+/**
+ * Persian Accounting System - Custom JavaScript
+ * Enhanced with accessibility and UX improvements
+ */
 
+// Global variables
+let darkMode = localStorage.getItem('darkMode') === 'true';
+
+/**
+ * Initialize all components when DOM is ready
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // Fix for RTL layout issues
-    fixRtlLayout();
-    
-    // Initialize dropdowns
-    initializeDropdowns();
-    
-    // Fix for chart display
-    fixChartDisplay();
-    
-    // Fix for form submissions
+    initializeDarkMode();
+    initializePersianDatePickers();
     setupFormValidation();
-    
-    // Initialize Modern Persian Date Pickers
-    initializeModernPersianDatePickers();
-    
-    // Add current Persian date display
+    initializeDropdowns();
+    fixChartDisplay();
     addCurrentPersianDate();
     
-    // Fix dark mode chart colors
-    fixDarkModeCharts();
+    // New accessibility and UX features
+    enhanceDeleteButtons();
+    initializeLoadingStates();
+    setupEmptyStates();
+    setupAccessibleForms();
+    initializeNumberFormatting();
+    setupKeyboardNavigation();
 });
 
 /**
- * Fix RTL layout issues
+ * Dark Mode functionality
  */
-function fixRtlLayout() {
-    // Fix sidebar position
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
+function initializeDarkMode() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
     
-    if (sidebar && mainContent) {
-        // Ensure sidebar is on the right in RTL layout
-        sidebar.style.float = 'right';
-        mainContent.style.float = 'left';
+    // Apply saved dark mode preference
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+        updateDarkModeIcon(true);
     }
     
-    // Fix dropdown menu positioning
-    const dropdownMenus = document.querySelectorAll('.dropdown-menu');
-    dropdownMenus.forEach(menu => {
-        menu.classList.add('dropdown-menu-end');
-    });
+    // Add click event listener to toggle button
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', function() {
+            toggleDarkMode();
+        });
+    }
+}
+
+function toggleDarkMode() {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', darkMode);
+    updateDarkModeIcon(darkMode);
+}
+
+function updateDarkModeIcon(isDark) {
+    const icon = document.querySelector('#darkModeToggle i');
+    if (icon) {
+        if (isDark) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
 }
 
 /**
- * Initialize Bootstrap dropdowns
+ * Initialize dropdowns
  */
 function initializeDropdowns() {
-    // Make sure all dropdowns work properly
-    const dropdownToggleElements = document.querySelectorAll('.dropdown-toggle');
-    dropdownToggleElements.forEach(element => {
-        element.addEventListener('click', function(e) {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
             e.preventDefault();
             const dropdownMenu = this.nextElementSibling;
-            if (dropdownMenu && dropdownMenu.classList.contains('dropdown-menu')) {
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if (menu !== dropdownMenu) {
+                    menu.classList.remove('show');
+                    const otherToggle = menu.previousElementSibling;
+                    if (otherToggle) {
+                        otherToggle.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+            
+            // Toggle current dropdown
+            if (dropdownMenu) {
                 dropdownMenu.classList.toggle('show');
                 this.setAttribute('aria-expanded', dropdownMenu.classList.contains('show'));
             }
@@ -80,13 +115,9 @@ function initializeDropdowns() {
  * Fix chart display issues
  */
 function fixChartDisplay() {
-    // Fix for performance chart in dashboard
     const performanceChartElement = document.getElementById('performanceChart');
     if (performanceChartElement && typeof Chart !== 'undefined') {
-        // Make sure chart is properly sized
         performanceChartElement.style.height = '250px';
-        
-        // Add RTL support for charts
         Chart.defaults.font.family = "'Vazir', 'IRANSans', sans-serif";
         Chart.defaults.font.size = 12;
     }
@@ -103,12 +134,10 @@ function setupFormValidation() {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Highlight invalid fields
                 const invalidFields = form.querySelectorAll(':invalid');
                 invalidFields.forEach(field => {
                     field.classList.add('is-invalid');
                     
-                    // Add event listener to remove invalid class when field is changed
                     field.addEventListener('input', function() {
                         if (this.checkValidity()) {
                             this.classList.remove('is-invalid');
@@ -123,29 +152,23 @@ function setupFormValidation() {
 }
 
 /**
- * Initialize Modern Persian Date Pickers with Holiday Support
+ * Initialize Persian Date Pickers
  */
 function initializePersianDatePickers() {
-    // Find all date input fields with data-persian-datepicker attribute or type="date"
     const dateInputs = document.querySelectorAll('input[data-persian-datepicker="true"], input[type="date"]');
     
     dateInputs.forEach(input => {
         initializeMdPersianDateTimePicker(input);
     });
     
-    // This section handles date range inputs that don't have data-persian-datepicker="true" attribute
-    // but have specific name patterns for date ranges
     const dateRangeInputs = document.querySelectorAll('input[name*="from_date"], input[name*="to_date"], input[name*="start_date"], input[name*="end_date"]');
     
     dateRangeInputs.forEach(input => {
-        // Skip if already processed by the first part (has data-persian-datepicker="true" attribute)
         if (input.getAttribute('data-persian-datepicker') === 'true') {
             return;
         }
         
-        if (input.type === 'date') {
-            initializeMdPersianDateTimePicker(input);
-        }
+        initializeMdPersianDateTimePicker(input);
     });
 }
 
@@ -153,20 +176,17 @@ function initializePersianDatePickers() {
  * Initialize MD Bootstrap Persian DateTime Picker for a specific input
  */
 function initializeMdPersianDateTimePicker(input) {
-    // Mark as initialized to prevent double initialization
     if (input.hasAttribute('data-md-picker-initialized')) {
         return;
     }
     input.setAttribute('data-md-picker-initialized', 'true');
     
-    // Convert the input to text type for better control
     input.type = 'text';
     input.placeholder = 'انتخاب تاریخ شمسی';
     input.dir = 'rtl';
     input.readOnly = true;
     input.style.cursor = 'pointer';
     
-    // Add calendar icon
     const inputGroup = document.createElement('div');
     inputGroup.className = 'input-group';
     input.parentNode.insertBefore(inputGroup, input);
@@ -177,7 +197,6 @@ function initializeMdPersianDateTimePicker(input) {
     inputGroupText.innerHTML = '<i class="fas fa-calendar-alt"></i>';
     inputGroup.appendChild(inputGroupText);
     
-    // Initialize MD Persian DateTime Picker with full holiday support
     if (typeof $ !== 'undefined' && $.fn.MdPersianDateTimePicker) {
         $(input).MdPersianDateTimePicker({
             targetTextSelector: input,
@@ -186,139 +205,312 @@ function initializeMdPersianDateTimePicker(input) {
             isGregorian: false,
             selectedDateToShow: new Date(),
             holidayList: [
-                // نوروز
                 { month: 1, day: 1, title: "نوروز" },
                 { month: 1, day: 2, title: "نوروز" },
                 { month: 1, day: 3, title: "نوروز" },
                 { month: 1, day: 4, title: "نوروز" },
-                
-                // روزهای ملی و مذهبی
                 { month: 1, day: 12, title: "روز جمهوری اسلامی" },
                 { month: 1, day: 13, title: "روز طبیعت (سیزده بدر)" },
                 { month: 2, day: 11, title: "پیروزی انقلاب اسلامی" },
                 { month: 3, day: 14, title: "رحلت امام خمینی" },
-                { month: 3, day: 15, title: "قیام ۱۵ خرداد" },
-                { month: 6, day: 28, title: "شهادت امام علی" },
-                { month: 8, day: 27, title: "شب قدر" },
-                { month: 9, day: 1, title: "عید فطر" },
-                { month: 9, day: 2, title: "تعطیل عید فطر" },
-                { month: 10, day: 20, title: "شهادت امام صادق" },
-                { month: 11, day: 10, title: "عید قربان" },
-                { month: 11, day: 18, title: "عید غدیر خم" },
-                { month: 12, day: 9, title: "تاسوعا" },
-                { month: 12, day: 10, title: "عاشورا" },
-                { month: 12, day: 20, title: "اربعین" },
-                { month: 12, day: 28, title: "رحلت پیامبر و شهادت امام حسن" },
-                { month: 12, day: 29, title: "شهادت امام رضا" }
+                { month: 3, day: 15, title: "قیام ۱۵ خرداد" }
             ],
             modalMode: true,
             placement: 'bottom',
             rangeSelector: false,
-            fromDate: null,
-            toDate: null,
-            disableBeforeToday: false,
-            disableAfterToday: false,
-            enableTimePicker: false,
-            groupId: '',
-            toSelectorText: 'تا تاریخ',
-            fromSelectorText: 'از تاریخ'
+            enableTimePicker: false
         });
     }
 }
 
 /**
- * Initialize Modern Persian Date Pickers with Holiday Support
- * This is the main function that replaces the old date picker
+ * Enhance delete buttons for better accessibility
  */
-function initializeModernPersianDatePickers() {
-    // Call the main initialization function for all inputs
-    initializePersianDatePickers();
+function enhanceDeleteButtons() {
+    const deleteElements = document.querySelectorAll('.delete-btn, [class*="delete"]');
     
-    // Also initialize any new date inputs that might be added dynamically
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(node) {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    const dateInputs = node.querySelectorAll 
-                        ? node.querySelectorAll('input[type="date"], input[data-persian-datepicker="true"]')
-                        : [];
-                    
-                    dateInputs.forEach(input => {
-                        if (!input.hasAttribute('data-md-picker-initialized')) {
-                            initializeMdPersianDateTimePicker(input);
-                        }
-                    });
+    deleteElements.forEach(element => {
+        // If it's a div, convert it to a proper button
+        if (element.tagName === 'DIV') {
+            const button = document.createElement('button');
+            button.className = element.className;
+            button.innerHTML = element.innerHTML;
+            button.type = 'button';
+            
+            // Copy onclick handler if exists
+            if (element.onclick) {
+                button.onclick = element.onclick;
+            }
+            
+            // Add proper ARIA attributes
+            const itemText = element.closest('tr') ? 
+                element.closest('tr').querySelector('td:first-child')?.textContent : 
+                'آیتم';
+            button.setAttribute('aria-label', `حذف ${itemText}`);
+            button.setAttribute('title', `حذف ${itemText}`);
+            
+            element.parentNode.replaceChild(button, element);
+        } else if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+            // Enhance existing buttons
+            if (!element.getAttribute('aria-label')) {
+                const itemText = element.closest('tr') ? 
+                    element.closest('tr').querySelector('td:first-child')?.textContent : 
+                    'آیتم';
+                element.setAttribute('aria-label', `حذف ${itemText}`);
+                element.setAttribute('title', `حذف ${itemText}`);
+            }
+        }
+    });
+}
+
+/**
+ * Initialize loading states for better UX
+ */
+function initializeLoadingStates() {
+    const forms = document.querySelectorAll('form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitButton) {
+                const originalText = submitButton.textContent || submitButton.value;
+                submitButton.disabled = true;
+                
+                if (submitButton.tagName === 'BUTTON') {
+                    submitButton.innerHTML = '<span class="loading-spinner"></span> در حال پردازش...';
+                } else {
+                    submitButton.value = 'در حال پردازش...';
                 }
-            });
+                
+                // Reset after 5 seconds in case of network issues
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    if (submitButton.tagName === 'BUTTON') {
+                        submitButton.textContent = originalText;
+                    } else {
+                        submitButton.value = originalText;
+                    }
+                }, 5000);
+            }
+        });
+    });
+}
+
+/**
+ * Setup empty states for better UX
+ */
+function setupEmptyStates() {
+    const tables = document.querySelectorAll('table tbody');
+    
+    tables.forEach(tbody => {
+        if (tbody.children.length === 0 || 
+            (tbody.children.length === 1 && tbody.children[0].textContent.trim() === '')) {
+            
+            const emptyState = document.createElement('tr');
+            emptyState.className = 'empty-state-row';
+            emptyState.innerHTML = `
+                <td colspan="100%" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h5>اطلاعاتی برای نمایش وجود ندارد</h5>
+                    <p>هنوز هیچ رکوردی ثبت نشده است. اولین مورد خود را اضافه کنید.</p>
+                </td>
+            `;
+            tbody.appendChild(emptyState);
+        }
+    });
+}
+
+/**
+ * Setup accessible forms with proper labels
+ */
+function setupAccessibleForms() {
+    const inputs = document.querySelectorAll('input:not([aria-label]):not([id])');
+    
+    inputs.forEach((input, index) => {
+        // Add ID if missing
+        if (!input.id) {
+            input.id = `input-${index}`;
+        }
+        
+        // Create label if missing and input has placeholder
+        if (input.placeholder && !document.querySelector(`label[for="${input.id}"]`)) {
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.className = 'sr-only';
+            label.textContent = input.placeholder;
+            input.parentNode.insertBefore(label, input);
+        }
+        
+        // Add aria-label if still missing
+        if (!input.getAttribute('aria-label') && input.placeholder) {
+            input.setAttribute('aria-label', input.placeholder);
+        }
+    });
+}
+
+/**
+ * Initialize number formatting for Persian locale
+ */
+function initializeNumberFormatting() {
+    const numberElements = document.querySelectorAll('.number-format, .price, .amount');
+    
+    numberElements.forEach(element => {
+        const value = parseFloat(element.textContent.replace(/[^\d.-]/g, ''));
+        if (!isNaN(value)) {
+            element.textContent = formatNumber(value);
+        }
+    });
+}
+
+/**
+ * Format numbers in Persian locale
+ */
+function formatNumber(number) {
+    return new Intl.NumberFormat('fa-IR').format(number);
+}
+
+/**
+ * Setup keyboard navigation improvements
+ */
+function setupKeyboardNavigation() {
+    // Enhanced focus management
+    const focusableElements = document.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    focusableElements.forEach(element => {
+        element.addEventListener('focus', function() {
+            this.style.outline = '2px solid #0d6efd';
+            this.style.outlineOffset = '2px';
+        });
+        
+        element.addEventListener('blur', function() {
+            this.style.outline = '';
+            this.style.outlineOffset = '';
         });
     });
     
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Add keyboard shortcuts for common actions
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+N for new items
+        if (e.ctrlKey && e.key === 'n') {
+            const addButton = document.querySelector('.btn-primary[href*="add"], .btn-primary[href*="new"]');
+            if (addButton) {
+                e.preventDefault();
+                addButton.click();
+            }
+        }
+        
+        // Escape to close modals
+        if (e.key === 'Escape') {
+            const openModal = document.querySelector('.modal.show');
+            if (openModal) {
+                const closeButton = openModal.querySelector('[data-bs-dismiss="modal"]');
+                if (closeButton) {
+                    closeButton.click();
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Add smooth animations to table rows
+ */
+function animateTableRows() {
+    const newRows = document.querySelectorAll('tr.new-item');
+    newRows.forEach(row => {
+        row.classList.add('new-item');
+        setTimeout(() => {
+            row.classList.remove('new-item');
+        }, 400);
+    });
+}
+
+/**
+ * Enhanced delete confirmation with accessibility
+ */
+function confirmDelete(message, itemName) {
+    return new Promise((resolve) => {
+        const confirmed = confirm(`${message}\n\nآیا از حذف "${itemName}" مطمئن هستید؟`);
+        resolve(confirmed);
+    });
 }
 
 /**
  * Add current Persian date to the page header
  */
 function addCurrentPersianDate() {
-    // Try to add current Persian date to header if possible
     const header = document.querySelector('.d-flex.justify-content-between.align-items-center');
     if (header && !document.querySelector('.current-persian-date')) {
         const dateElement = document.createElement('div');
         dateElement.className = 'current-persian-date text-muted small';
         dateElement.style.direction = 'rtl';
         
-        // Get current Persian date
-        const today = new Date();
-        const persianDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'long'
-        }).format(today);
-        
-        dateElement.innerHTML = `<i class="fas fa-calendar-alt me-1"></i> امروز: ${persianDate}`;
-        
-        // Find a good place to insert it
-        const breadcrumbDiv = header.querySelector('div:first-child');
-        if (breadcrumbDiv) {
-            breadcrumbDiv.appendChild(dateElement);
+        if (typeof persianDate !== 'undefined') {
+            const today = new persianDate();
+            dateElement.textContent = today.format('dddd، DD MMMM YYYY');
+            
+            const rightDiv = header.querySelector('div:last-child');
+            if (rightDiv) {
+                rightDiv.appendChild(dateElement);
+            }
         }
     }
 }
 
-window.selectDate = function(year, month, day) {
-    if (window.currentDateInput) {
-        const date = new Date(year, month, day);
-        const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        window.currentDateInput.value = formatter.format(date);
-        closeDatePicker();
-    }
-};
-
-window.selectToday = function() {
-    if (window.currentDateInput) {
-        const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        window.currentDateInput.value = formatter.format(new Date());
-        closeDatePicker();
-    }
-};
-
-window.closeDatePicker = function() {
-    if (window.currentDatePopup) {
-        window.currentDatePopup.remove();
-        window.currentDatePopup = null;
-        window.currentDateInput = null;
-    }
-};
-
 /**
- * Fix dark mode chart colors
+ * Utility functions
  */
-function fixDarkModeCharts() {
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    if (isDarkMode && typeof Chart !== 'undefined') {
-        Chart.defaults.color = '#ffffff';
-        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.1)';
-        Chart.defaults.plugins.legend.labels.color = '#ffffff';
+
+// Format numbers with Persian separators
+function formatPersianNumber(number) {
+    return number.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+}
+
+// Show loading spinner
+function showLoading(element) {
+    if (element) {
+        element.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
     }
 }
+
+// Hide loading spinner
+function hideLoading(element, originalText) {
+    if (element) {
+        element.innerHTML = originalText || 'تأیید';
+    }
+}
+
+// Show alert message
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alert-container');
+    if (alertContainer) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+}
+
+// Export functions for global use
+window.toggleDarkMode = toggleDarkMode;
+window.showAlert = showAlert;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.formatCurrency = formatCurrency;
+window.formatPersianNumber = formatPersianNumber;
+
+// End of file

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}گزارش فروش - سیستم حسابداری{% endblock %}
+{% block title %}گزارش فروش{% endblock %}
 
 {% block breadcrumb_items %}
 <li class="breadcrumb-item"><a href="{{ url_for('reports') }}">گزارشات</a></li>
@@ -8,187 +8,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Page Header -->
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <i class="fas fa-chart-line text-primary"></i>
-                گزارش فروش
-            </h2>
-            <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-right"></i>
-                بازگشت به گزارشات
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Date Range Filter -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <form method="GET" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label for="start_date" class="form-label">از تاریخ</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}" data-persian-datepicker="true">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="end_date" class="form-label">تا تاریخ</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}" data-persian-datepicker="true">
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
-                            اعمال فیلتر
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Sales Chart -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-area"></i>
-                    نمودار فروش روزانه
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="salesChart" height="100"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Top Customers and Products -->
-<div class="row">
-    <!-- Top Customers -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-users"></i>
-                    برترین مشتریان
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if top_customers %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>مشتری</th>
-                                <th>تعداد فاکتور</th>
-                                <th>مبلغ کل</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for customer in top_customers %}
-                            <tr>
-                                <td>{{ customer.name }}</td>
-                                <td>{{ customer.invoice_count }}</td>
-                                <td>{{ "{:,.0f}".format(customer.total_amount) }} تومان</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i>
+                        گزارش فروش
+                    </h4>
                 </div>
-                {% else %}
-                <p class="text-muted text-center">داده‌ای برای نمایش وجود ندارد</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Top Products -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-box"></i>
-                    پرفروش‌ترین محصولات
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if top_products %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>محصول</th>
-                                <th>تعداد فروش</th>
-                                <th>مبلغ کل</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in top_products %}
-                            <tr>
-                                <td>{{ product.name }}</td>
-                                <td>{{ product.total_quantity }}</td>
-                                <td>{{ "{:,.0f}".format(product.total_amount) }} تومان</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        گزارش فروش بازه زمانی در حال توسعه است.
+                    </div>
                 </div>
-                {% else %}
-                <p class="text-muted text-center">داده‌ای برای نمایش وجود ندارد</p>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Sales Chart
-const ctx = document.getElementById('salesChart').getContext('2d');
-const salesData = {{ sales_data | tojson | default('[]') }};
-
-const labels = salesData.map(item => item.date || '');
-const data = salesData.map(item => item.total_sales || 0);
-
-const salesChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'فروش روزانه (تومان)',
-            data: data,
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return value.toLocaleString() + ' تومان';
-                    }
-                }
-            }
-        }
-    }
-});
-</script>
 {% endblock %}

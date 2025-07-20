@@ -20,10 +20,14 @@
                     <i class="fas fa-plus"></i>
                     فاکتور جدید
                 </a>
-                <a href="{{ url_for('create_invoice_from_order') }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('add_invoice') }}" class="btn btn-outline-primary">
                     <i class="fas fa-shopping-cart"></i>
                     از سفارش
                 </a>
+                <button type="button" class="btn btn-outline-danger" onclick="exportReportPDF(this)" title="دانلود گزارش فاکتورها">
+                    <i class="fas fa-file-pdf"></i>
+                    صادرات PDF
+                </button>
             </div>
         </div>
     </div>
@@ -48,10 +52,14 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <input type="date" class="form-control" name="from_date" value="{{ from_date }}" data-persian-datepicker="true">
+                        <input type="date" class="form-control" name="from_date" value="{{ from_date }}" 
+                               data-persian-datepicker="true" placeholder="از تاریخ..." 
+                               aria-label="تاریخ شروع جستجو">
                     </div>
                     <div class="col-md-2">
-                        <input type="date" class="form-control" name="to_date" value="{{ to_date }}" data-persian-datepicker="true">
+                        <input type="date" class="form-control" name="to_date" value="{{ to_date }}" 
+                               data-persian-datepicker="true" placeholder="تا تاریخ..." 
+                               aria-label="تاریخ پایان جستجو">
                     </div>
                     <div class="col-md-3">
                         <div class="d-flex gap-2">

@@ -56,18 +56,28 @@
                         
                         <div class="col-md-6 mb-3">
                             <label for="category" class="form-label">دسته‌بندی</label>
-                            <input type="text" class="form-control" id="category" name="category" placeholder="جعبه‌های کوچک">
+                            <div data-custom-select='{"storageKey": "productCategories", "placeholder": "دسته‌بندی محصول را انتخاب کنید", "addNewText": "افزودن دسته‌بندی جدید"}'>
+                                <select class="form-control" id="category" name="category">
+                                    <option value="">انتخاب کنید</option>
+                                    <option value="جعبه‌های کوچک">جعبه‌های کوچک</option>
+                                    <option value="جعبه‌های متوسط">جعبه‌های متوسط</option>
+                                    <option value="جعبه‌های بزرگ">جعبه‌های بزرگ</option>
+                                    <option value="جعبه‌های ویژه">جعبه‌های ویژه</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="unit" class="form-label">واحد اندازه‌گیری</label>
-                            <select class="form-select" id="unit" name="unit">
-                                <option value="عدد">عدد</option>
-                                <option value="کیلوگرم">کیلوگرم</option>
-                                <option value="متر">متر</option>
-                                <option value="بسته">بسته</option>
-                                <option value="کارتن">کارتن</option>
-                            </select>
+                            <div data-custom-select='{"storageKey": "measurementUnits", "placeholder": "واحد اندازه‌گیری را انتخاب کنید", "addNewText": "افزودن واحد جدید"}'>
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="عدد">عدد</option>
+                                    <option value="کیلوگرم">کیلوگرم</option>
+                                    <option value="متر">متر</option>
+                                    <option value="بسته">بسته</option>
+                                    <option value="کارتن">کارتن</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="col-12 mb-3">
@@ -97,15 +107,17 @@
                         
                         <div class="col-md-3 mb-3">
                             <label for="material_type" class="form-label">نوع مواد</label>
-                            <select class="form-select" id="material_type" name="material_type">
-                                <option value="">انتخاب کنید</option>
-                                <option value="کارتن معمولی">کارتن معمولی</option>
-                                <option value="کارتن ضخیم">کارتن ضخیم</option>
-                                <option value="کارتن صنعتی">کارتن صنعتی</option>
-                                <option value="کارتن مقوایی">کارتن مقوایی</option>
-                                <option value="پلاستیک">پلاستیک</option>
-                                <option value="چوب">چوب</option>
-                            </select>
+                            <div data-custom-select='{"storageKey": "materialTypes", "placeholder": "نوع مواد را انتخاب کنید", "addNewText": "افزودن نوع مواد جدید"}'>
+                                <select class="form-select" id="material_type" name="material_type">
+                                    <option value="">انتخاب کنید</option>
+                                    <option value="کارتن معمولی">کارتن معمولی</option>
+                                    <option value="کارتن ضخیم">کارتن ضخیم</option>
+                                    <option value="کارتن صنعتی">کارتن صنعتی</option>
+                                    <option value="کارتن مقوایی">کارتن مقوایی</option>
+                                    <option value="پلاستیک">پلاستیک</option>
+                                    <option value="چوب">چوب</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <!-- Pricing -->

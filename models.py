@@ -5,6 +5,36 @@ import jdatetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Numeric
 
+# RBAC Models
+class Permission(db.Model):
+    __tablename__ = 'permissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+    category = db.Column(db.String(32))  # customers, products, orders, invoices, reports, admin
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
+    display_name = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.Text)
+    is_system_role = db.Column(db.Boolean, default=False)  # Cannot be deleted
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    users = db.relationship('User', backref='user_role', lazy=True)
+    permissions = db.relationship('Permission', secondary='role_permissions', backref='roles')
+
+# Association table for many-to-many relationship between roles and permissions
+role_permissions = db.Table('role_permissions',
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True),
+    db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id'), primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
@@ -13,8 +43,13 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     full_name = db.Column(db.String(128), nullable=False)
     password_hash = db.Column(db.String(256))
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=True)
+    
+    # Keep legacy role field for backward compatibility
     role = db.Column(db.String(32), default='accountant')  # admin, accountant
+    
     is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_password(self, password):
@@ -24,13 +59,63 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
     
     def get_jalali_created_date(self):
-        return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime('%Y/%m/%d')
+        if self.created_at:
+            return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime('%Y/%m/%d')
+        return 'نامشخص'
     
+    def get_jalali_last_login(self):
+        if self.last_login:
+            return jdatetime.datetime.fromgregorian(datetime=self.last_login).strftime('%Y/%m/%d %H:%M')
+        return 'هرگز وارد نشده'
+    
+    # Legacy role methods for backward compatibility
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == 'admin' or (self.user_role and self.user_role.name == 'admin')
     
     def is_accountant(self):
-        return self.role == 'accountant'
+        return self.role == 'accountant' or (self.user_role and self.user_role.name == 'accountant')
+    
+    # New permission-based methods
+    def has_permission(self, permission_name):
+        """Check if user has a specific permission"""
+        if not self.user_role:
+            # Fallback to legacy role system
+            if self.is_admin():
+                return True  # Admin has all permissions
+            return False
+        
+        # Check if user's role has the permission
+        for permission in self.user_role.permissions:
+            if permission.name == permission_name:
+                return True
+        return False
+    
+    def has_any_permission(self, permission_names):
+        """Check if user has any of the specified permissions"""
+        if not isinstance(permission_names, list):
+            permission_names = [permission_names]
+        
+        for permission_name in permission_names:
+            if self.has_permission(permission_name):
+                return True
+        return False
+    
+    def get_permissions(self):
+        """Get list of all permissions for this user"""
+        if not self.user_role:
+            return []
+        return [p.name for p in self.user_role.permissions]
+    
+    def get_role_display_name(self):
+        """Get display name of user's role"""
+        if self.user_role:
+            return self.user_role.display_name
+        # Fallback to legacy role
+        if self.role == 'admin':
+            return 'مدیر سیستم'
+        elif self.role == 'accountant':
+            return 'حسابدار'
+        return 'نامشخص'
 
 class Customer(db.Model):
     __tablename__ = 'customers'

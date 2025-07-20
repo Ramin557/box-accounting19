@@ -45,7 +45,11 @@
                         
                         <div class="col-md-6 mb-3">
                             <label for="due_date" class="form-label">سررسید</label>
-                            <input type="date" class="form-control" id="due_date" name="due_date" data-persian-datepicker="true">
+                            <input type="date" class="form-control" id="due_date" name="due_date" data-persian-datepicker="true" 
+                                   aria-describedby="due_date_help">
+                            <div id="due_date_help" class="form-text">
+                                تاریخ سررسید پرداخت فاکتور (اختیاری)
+                            </div>
                         </div>
                         
                         <div class="col-12 mb-3">
@@ -60,10 +64,17 @@
                         <div class="col-12 mb-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="text-primary">اقلام فاکتور</h6>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addInvoiceItem()">
-                                    <i class="fas fa-plus"></i>
-                                    افزودن قلم
-                                </button>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addInvoiceItem()">
+                                        <i class="fas fa-plus"></i>
+                                        افزودن قلم
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportTablePDF(this)" 
+                                            title="دانلود پیش‌نمایش فاکتور">
+                                        <i class="fas fa-file-pdf"></i>
+                                        پیش‌نمایش PDF
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         

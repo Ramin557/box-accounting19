@@ -135,7 +135,18 @@
 {% block extra_js %}
 <script>
 let itemCounter = 0;
-const products = {{ products | tojson | default('[]') }};
+// Products data for dynamic product selection
+const products = [
+    {% for product in products %}
+    {
+        id: {{ product.id }},
+        name: "{{ product.name }}",
+        code: "{{ product.code }}",
+        selling_price: {{ product.selling_price }},
+        current_stock: {{ product.current_stock }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
 
 function addOrderItem() {
     itemCounter++;

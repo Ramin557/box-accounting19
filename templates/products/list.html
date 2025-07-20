@@ -214,7 +214,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                {% set low_stock = products.items | selectattr('current_stock', '<=', 'min_stock_level') | list %}
+                {% set low_stock = products.items | selectattr('current_stock', 'le', 10) | list %}
                 {% if low_stock %}
                 <p class="mb-2">محصولات کم موجود یا تمام شده:</p>
                 <div class="row">

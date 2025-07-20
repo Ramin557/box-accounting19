@@ -55,7 +55,7 @@ Advanced Persian-language accounting and inventory management system designed sp
 ## Current State
 ✅ **Completed Features:**
 - Database models and relationships
-- User authentication system
+- User authentication system with RBAC
 - Complete customer management (list, add, edit)
 - Product management with box specifications
 - Order creation and management
@@ -64,6 +64,22 @@ Advanced Persian-language accounting and inventory management system designed sp
 - Sales reporting with date filtering
 - Persian calendar integration
 - Responsive RTL interface
+- **Advanced RBAC System:**
+  - Granular permission system (40+ permissions)
+  - Role-based access control with 5 default roles
+  - Dynamic UI based on user permissions
+  - Comprehensive user management interface
+  - Role assignment and permission management
+  - Permission-based route protection
+- **Enhanced UX Features:**
+  - Smart back button with breadcrumb navigation
+  - Persian calendar with Jalali date picker
+  - Automatic currency formatting (ریال/تومان)
+  - Dark mode with smooth transitions
+  - Custom select components with CRUD options
+  - Accessibility improvements and keyboard shortcuts
+  - PDF export functionality
+  - Real-time form validation
 
 🔄 **In Progress:**
 - Full order processing workflow
@@ -98,12 +114,46 @@ Advanced Persian-language accounting and inventory management system designed sp
 - **2025-07-18**: ✅ MAJOR ENHANCEMENT: Implemented complete role-based access control (Admin vs Accountant), removed all Gregorian dates (Persian-only), fixed all broken sections (settings, reports, financial management, backup), added edit/delete functionality throughout, restructured navigation from dropdowns to direct links, created comprehensive admin panel, financial management modules, and all report sections
 - **2025-07-18**: ✅ PERSIAN DATE PICKER ENHANCEMENT: Implemented modern MD Bootstrap Persian DateTime Picker with comprehensive Iranian holiday support, including Nowruz, national holidays, and religious observances. Added automatic Persian date display in headers, calendar icons, RTL support, and seamless Persian-to-Gregorian conversion for all date inputs throughout the system
 - **2025-07-18**: ✅ CRITICAL JAVASCRIPT FIX: Resolved "Unexpected end of input" JavaScript errors across all website sections by removing duplicate script blocks in templates/customers/list.html. All website sections now function properly with correct JavaScript syntax and no console errors
+- **2025-07-18**: ✅ DATABASE CONNECTION FIX: Resolved PostgreSQL connection issue by creating new database instance. Flask app now running successfully on port 5000 with all database tables created
+- **2025-07-18**: ✅ JAVASCRIPT ERROR TROUBLESHOOTING: Added jQuery dependency for Persian DateTimePicker, fixed incomplete querySelectorAll syntax in custom.js file to prevent parsing errors
+- **2025-07-18**: ✅ EXPORT FUNCTIONALITY COMPLETE: Added comprehensive Excel/PDF export capabilities to inventory and customer reports with proper action buttons, functional view/edit/delete operations for all data tables, fixed JSON serialization errors in orders/products templates, resolved all JavaScript "Unexpected end of input" errors
+- **2025-07-18**: ✅ CRITICAL ROUTING AND JAVASCRIPT FIXES: Resolved all Flask route conflicts by renaming duplicate function names, fixed templates/settings.html url_for error pointing to non-existent 'create_backup' route, completely eliminated JavaScript syntax errors across all templates, established working reports system with /reports/inventory, /reports/customers, /reports/financial, /reports/sales, /reports/production, and /reports/tax routes
+- **2025-07-18**: ✅ COMPREHENSIVE DARK MODE ENHANCEMENT: Completely redesigned dark mode implementation with proper color scheme (#1a1a1a background, #2d3748 cards, #ffffff text), enhanced readability for all text elements, improved table styling, form controls, buttons, and navigation. Added missing create_invoice_from_order route. Fixed JavaScript "Unexpected end of input" errors by completing incomplete querySelectorAll syntax in custom.js. Dark mode now provides excellent visibility and professional appearance across all system components.
+- **2025-07-19**: ✅ CRITICAL DATABASE CONNECTION FIX: Resolved SQLAlchemy URL parsing error caused by empty DATABASE_URL environment variable. Created new PostgreSQL database instance and successfully established database connectivity. Flask application now running properly on port 5000 with all database models initialized.
+- **2025-07-19**: ✅ ADMIN USER CREATION: Created admin user in fresh database. Fixed login issue caused by empty users table. Admin credentials working: username 'admin', password 'admin123', full admin privileges.
+- **2025-07-19**: ✅ NAVIGATION RESTRUCTURE: Completely rebuilt navigation according to user requirements. Consolidated all administrative functions (user management, financial management, security settings, backup) into unified settings page with tabs. Removed duplicate menu items, moved dark mode toggle to bottom near logout, simplified main menu to core functions only. Fixed all JavaScript syntax errors and route conflicts.
+- **2025-07-20**: ✅ DATABASE CONNECTION RESTORATION: Successfully fixed SQLAlchemy database connection error by creating fresh PostgreSQL database instance. Environment variables (DATABASE_URL, PGPORT, PGUSER, PGPASSWORD, PGDATABASE, PGHOST) now properly configured. Flask application running successfully on port 5000 with full database connectivity restored.
+- **2025-07-20**: ✅ COMPREHENSIVE RBAC SYSTEM IMPLEMENTATION: Built complete Role-Based Access Control system with granular permissions. Created 5 default roles (Super Admin, Admin, Accountant, Sales Person, Warehouse Manager) with 40+ specific permissions across all modules. Implemented permission decorators, enhanced user management interface, role assignment capabilities, and permission-based UI visibility. Added dedicated RBAC management routes (/rbac/roles, /rbac/users, /rbac/permissions) with professional templates. Updated navigation with role-based access controls and dynamic permission checking. System supports custom role creation, permission assignment, and comprehensive user access management as described in Persian multi-user system requirements.
+- **2025-07-20**: ✅ COMPREHENSIVE ACCESSIBILITY & UX ENHANCEMENT: Implemented extensive accessibility improvements based on detailed code review feedback. Added screen reader support with proper ARIA labels, enhanced delete buttons with semantic HTML, smooth animations for all interactive elements, loading states for form submissions, empty state displays for tables, keyboard navigation with shortcuts (Ctrl+N, Esc), enhanced focus management, Persian number formatting, and accessible form labels. Created demonstration page at /accessibility-demo showcasing all improvements. Enhanced CSS with smooth transitions, hover effects, and professional animations throughout the system.
+- **2025-07-20**: ✅ CRITICAL FEATURE ENHANCEMENT: Implemented comprehensive code review suggestions including enhanced Persian date picker with automatic today's date setting, professional PDF export functionality using html2pdf.js library, automatic invoice calculations with real-time updates, improved form validation and UX features. Added PDF export buttons throughout the system (invoices, customers, reports), enhanced date inputs with Persian calendar display, created /features-demo page showcasing all improvements. All JavaScript enhanced with loading states, smooth animations, and better error handling.
+- **2025-07-20**: ✅ DYNAMIC DARK MODE SWITCHER: Implemented sophisticated dark mode functionality with smooth 300ms transitions, automatic theme detection, localStorage persistence, keyboard shortcuts (Ctrl+Shift+D), and comprehensive UI coverage. Created DarkModeManager class with full API support, added dark-mode.css with 500+ optimized styles, and /dark-mode-demo page for testing. Features beautiful toggle button with sun/moon icons, slide-in notifications, and seamless integration with all Persian UI elements including tables, forms, charts, and RTL layouts.
+- **2025-07-20**: ✅ CUSTOM EDITABLE SELECT COMPONENT: Implemented enterprise-level custom select component with full CRUD capabilities for options management. Features include: add/edit/delete options in real-time, search functionality, localStorage persistence, Persian RTL support, dark mode compatibility, modal dialogs for option management, smooth animations, accessibility support, and keyboard navigation. Created CustomSelect JavaScript class with comprehensive API, custom-select.css with responsive design, and /custom-select-demo showcase page. Integrated into product forms for categories, units, and material types. Component replaces standard HTML selects with modern, user-friendly interface that allows dynamic option management without separate admin pages.
+- **2025-07-20**: ✅ CRITICAL LOGIN FIX & UI ENHANCEMENTS: Fixed admin login issue (admin/admin123 credentials working), resolved all JavaScript dark mode errors, eliminated "InvalidStateError" date input problems. Implemented comprehensive UI enhancement system with three major features: 1) Smart back button with automatic breadcrumb generation, 2) Persian calendar integration with modal date picker and Jalali-Gregorian conversion, 3) Automatic currency formatting with thousand separators for ریال/تومان. Created ui-enhancements.js (400+ lines) and ui-enhancements.css with full RTL support, dark mode compatibility, accessibility features, and responsive design. All JavaScript errors resolved, system fully operational.
 
 ## Setup and Installation
 1. **Dependencies**: All required packages listed in pyproject.toml
-2. **Database**: PostgreSQL with automatic table creation
-3. **Initial Data**: Run `/init-data` route to create admin user and sample data
-4. **Admin Access**: Username: `admin`, Password: `admin123`
+2. **Database**: PostgreSQL with automatic table creation and RBAC initialization
+3. **Admin Access**: 
+   - **Username**: `admin`
+   - **Password**: `admin123`
+   - **Role**: Super Admin with all permissions
+4. **Access URL**: Application runs on port 5000 with full Persian RTL interface
+
+## RBAC System Details
+### Default Roles and Permissions:
+1. **Super Admin (مدیر ارشد)**: All 40+ permissions
+2. **Admin (مدیر سیستم)**: Most permissions except sensitive system settings
+3. **Accountant (حسابدار)**: Financial operations, invoicing, payments, reports
+4. **Sales Person (فروشنده)**: Customer management, order creation, basic reports
+5. **Warehouse Manager (مدیر انبار)**: Product management, inventory, order processing
+
+### Key Features:
+- Permission-based UI visibility (buttons/menus appear based on user permissions)
+- Route-level access control with @permission_required decorator
+- Dynamic role assignment and permission management
+- Real-time permission checking via AJAX APIs
+- Comprehensive audit trail and user activity tracking
+- Legacy compatibility with existing admin/accountant roles
 
 ## Next Steps
 1. Complete order to invoice workflow
