@@ -420,7 +420,7 @@
 
 {% block extra_css %}
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='https://cdn.jsdelivr.net/npm/chart.js') }}"></script></script>
 <style>
 .stat-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -512,7 +512,7 @@
 
 {% block extra_js %}
 <!-- Include Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='https://cdn.jsdelivr.net/npm/chart.js') }}"></script></script>
 
 <!-- Dashboard Data for JavaScript -->
 <script>
