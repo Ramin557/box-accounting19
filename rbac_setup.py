@@ -63,6 +63,7 @@ def create_default_permissions():
         {'name': 'create_backups', 'description': 'تهیه نسخه پشتیبان', 'category': 'admin'},
         {'name': 'restore_backups', 'description': 'بازگردانی نسخه پشتیبان', 'category': 'admin'},
         {'name': 'view_audit_logs', 'description': 'مشاهده لاگ‌های سیستم', 'category': 'admin'},
+        {'name': 'admin_panel', 'description': 'دسترسی به پنل مدیریت', 'category': 'admin'},
     ]
     
     created_permissions = []
@@ -254,4 +255,5 @@ def init_rbac_system():
 if __name__ == "__main__":
     from app import app
     with app.app_context():
+        db.create_all()
         init_rbac_system()

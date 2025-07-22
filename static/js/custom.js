@@ -10,7 +10,6 @@ let darkMode = localStorage.getItem('darkMode') === 'true';
  * Initialize all components when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Remove initializeDarkMode() call to avoid conflict with dark-mode.js
     initializePersianDatePickers();
     setupFormValidation();
     initializeDropdowns();
@@ -24,47 +23,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setupAccessibleForms();
     initializeNumberFormatting();
     setupKeyboardNavigation();
+    
+    // Initialize dropdowns
+    initializeDropdowns();
 });
 
-/**
- * Dark Mode functionality
- */
-function initializeDarkMode() {
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    
-    // Apply saved dark mode preference
-    if (darkMode) {
-        document.body.classList.add('dark-mode');
-        updateDarkModeIcon(true);
-    }
-    
-    // Add click event listener to toggle button
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('click', function() {
-            toggleDarkMode();
-        });
-    }
-}
-
-function toggleDarkMode() {
-    darkMode = !darkMode;
-    document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', darkMode);
-    updateDarkModeIcon(darkMode);
-}
-
-function updateDarkModeIcon(isDark) {
-    const icon = document.querySelector('#darkModeToggle i');
-    if (icon) {
-        if (isDark) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-    }
-}
 
 /**
  * Initialize dropdowns

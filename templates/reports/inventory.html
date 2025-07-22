@@ -2,62 +2,42 @@
 
 {% block title %}گزارش موجودی{% endblock %}
 
-{% block breadcrumb_items %}
-<li class="breadcrumb-item"><a href="{{ url_for('reports') }}">گزارشات</a></li>
-<li class="breadcrumb-item active">گزارش موجودی</li>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">
-                        <i class="fas fa-warehouse"></i>
-                        گزارش موجودی
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>نام محصول</th>
-                                    <th>موجودی فعلی</th>
-                                    <th>حداقل موجودی</th>
-                                    <th>قیمت واحد</th>
-                                    <th>ارزش موجودی</th>
-                                    <th>وضعیت</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for product in products %}
-                                <tr>
-                                    <td>{{ product.name }}</td>
-                                    <td>{{ product.current_stock or 0 }}</td>
-                                    <td>{{ product.min_stock_level or 0 }}</td>
-                                    <td>{{ '{:,}'.format(product.cost_price or 0) }} ریال</td>
-                                    <td>{{ '{:,}'.format((product.current_stock or 0) * (product.cost_price or 0)) }} ریال</td>
-                                    <td>
-                                        {% if (product.current_stock or 0) <= 0 %}
-                                            <span class="badge bg-danger">ناموجود</span>
-                                        {% elif (product.current_stock or 0) <= (product.min_stock_level or 0) %}
-                                            <span class="badge bg-warning">کم موجودی</span>
-                                        {% else %}
-                                            <span class="badge bg-success">موجود</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">موجودی پیدا نشد</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-3">گزارش موجودی</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">گزارش موجودی</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>کد محصول</th>
+                            <th>نام محصول</th>
+                            <th>موجودی فعلی</th>
+                            <th>قیمت تمام شده</th>
+                            <th>ارزش موجودی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.code }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.current_stock }}</td>
+                            <td>{{ "{:,.0f}".format(product.cost_price) }}</td>
+                            <td>{{ "{:,.0f}".format(product.current_stock * product.cost_price) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

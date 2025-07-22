@@ -2,60 +2,42 @@
 
 {% block title %}گزارش مشتریان{% endblock %}
 
-{% block breadcrumb_items %}
-<li class="breadcrumb-item"><a href="{{ url_for('reports') }}">گزارشات</a></li>
-<li class="breadcrumb-item active">گزارش مشتریان</li>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">
-                        <i class="fas fa-users"></i>
-                        گزارش مشتریان
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>نام مشتری</th>
-                                    <th>شرکت</th>
-                                    <th>تلفن</th>
-                                    <th>تعداد سفارشات</th>
-                                    <th>مجموع خرید</th>
-                                    <th>وضعیت</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for customer in customers %}
-                                <tr>
-                                    <td>{{ customer.name }}</td>
-                                    <td>{{ customer.company_name or '-' }}</td>
-                                    <td>{{ customer.phone or '-' }}</td>
-                                    <td>{{ customer.total_orders or 0 }}</td>
-                                    <td>{{ '{:,}'.format(customer.total_amount or 0) }} ریال</td>
-                                    <td>
-                                        {% if customer.is_active %}
-                                            <span class="badge bg-success">فعال</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">غیرفعال</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">مشتری پیدا نشد</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-3">گزارش مشتریان</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">گزارش مشتریان</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>نام</th>
+                            <th>شرکت</th>
+                            <th>تلفن</th>
+                            <th>ایمیل</th>
+                            <th>موجودی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.company_name }}</td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.email }}</td>
+                            <td>{{ "{:,.0f}".format(customer.balance) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

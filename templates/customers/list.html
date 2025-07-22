@@ -36,16 +36,16 @@
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-8">
-                        <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="جستجو در نام، شرکت یا شماره تلفن...">
+                        <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="جستجو در نام، شرکت، شماره تلفن یا ایمیل...">
                     </div>
                     <div class="col-md-4">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i>
+                                <i class="bi bi-search"></i>
                                 جستجو
                             </button>
                             <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i>
+                                <i class="bi bi-x"></i>
                                 پاک کردن
                             </a>
                         </div>

@@ -535,9 +535,8 @@ body, .container, h4, .btn, .list li, .card, .navbar, .table, .form-control, .fo
 
 /* Fix for RTL layout */
 body {
-    font-family: 'Vazir', 'IRANSans', sans-serif;
+    font-family: 'Vazirmatn', sans-serif;
     direction: rtl;
-    text-align: right;
 }
 
 /* Fix for sidebar alignment */
@@ -546,7 +545,6 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white;
     padding-top: 1rem;
-    float: right;
 }
 
 .sidebar-bottom {
@@ -558,7 +556,6 @@ body {
 /* Fix for main content alignment */
 .main-content {
     padding: 2rem;
-    float: left;
 }
 
 /* Fix for stat cards alignment */
@@ -570,6 +567,12 @@ body {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     margin-bottom: 1rem;
     color: #212529;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
 }
 
 .stat-card:hover {
@@ -637,15 +640,35 @@ body {
     color: #e2e8f0 !important;
 }
 
-/* Dark mode financial status card */
-.dark-mode .card[style*="border: 2px solid #dc3545"] {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
-    border: 2px solid #e53e3e !important;
+.financial-status-card {
+    border: 2px solid #dc3545;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
 }
 
-.dark-mode .card-header[style*="background: linear-gradient(135deg, #dc3545"] {
-    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
-    color: white !important;
+.financial-status-card .card-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border-bottom: 1px solid #dc3545;
+}
+
+.financial-status-card .p-3.rounded {
+    color: white;
+}
+
+.financial-status-card .p-3.rounded:nth-child(1) {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.financial-status-card .p-3.rounded:nth-child(2) {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.financial-status-card .p-3.rounded:nth-child(3) {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.financial-status-card .p-3.rounded:nth-child(4) {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
 }
 
 /* Dark mode progress bars */
@@ -763,10 +786,6 @@ body {
     padding-right: 0;
 }
 
-/* Fix for card headers in RTL */
-.card-header {
-    text-align: right;
-}
 
 /* Fix for quick action buttons */
 .quick-actions .btn {
