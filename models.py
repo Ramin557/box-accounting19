@@ -1,4 +1,4 @@
-from app import db
+from extensions import db
 from flask_login import UserMixin
 from datetime import datetime
 import jdatetime
@@ -175,6 +175,13 @@ class Product(db.Model):
     # Pricing
     cost_price = db.Column(Numeric(15, 2), default=0)
     selling_price = db.Column(Numeric(15, 2), default=0)
+    cost = db.Column(Numeric(15, 2), default=0)
+
+    def calculate_cost(self):
+        total_cost = 0
+        for bom_item in self.raw_materials:
+            total_cost += bom_item.raw_material.cost_price * bom_item.quantity
+        self.cost = total_cost
     
     # Inventory
     current_stock = db.Column(db.Integer, default=0)
@@ -188,6 +195,25 @@ class Product(db.Model):
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
     invoice_items = db.relationship('InvoiceItem', backref='product', lazy=True)
     stock_movements = db.relationship('StockMovement', backref='product', lazy=True)
+    raw_materials = db.relationship('RawMaterial', secondary='product_raw_materials', backref=db.backref('products', lazy='dynamic'))
+
+class RawMaterial(db.Model):
+    __tablename__ = 'raw_materials'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.Text)
+    unit = db.Column(db.String(20), default='کیلوگرم')
+    cost_price = db.Column(Numeric(15, 2), default=0)
+    current_stock = db.Column(db.Integer, default=0)
+    min_stock_level = db.Column(db.Integer, default=0)
+    max_stock_level = db.Column(db.Integer, default=1000)
+
+product_raw_materials = db.Table('product_raw_materials',
+    db.Column('product_id', db.Integer, db.ForeignKey('products.id')),
+    db.Column('raw_material_id', db.Integer, db.ForeignKey('raw_materials.id')),
+    db.Column('quantity', db.Integer, nullable=False)
+)
 
 class Order(db.Model):
     __tablename__ = 'orders'

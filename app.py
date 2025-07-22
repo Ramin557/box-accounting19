@@ -21,18 +21,26 @@ logging.basicConfig(level=logging.DEBUG)
 class Base(DeclarativeBase):
     pass
 
-db = SQLAlchemy(model_class=Base)
+from extensions import db
 login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
 
 # Create the app
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-for-development")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Ensure the instance folder exists
+instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance")
+try:
+    os.makedirs(instance_path)
+except OSError:
+    pass
+
 # Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///" + os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance", "accounting.db"))
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///" + os.path.join(instance_path, "accounting.db"))
+print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,

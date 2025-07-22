@@ -47,7 +47,32 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    total_orders = Order.query.count()
+    monthly_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+        and_(Invoice.invoice_date >= datetime.now().replace(day=1), Invoice.status == 'paid')
+    ).scalar() or 0
+    total_customers = Customer.query.count()
+    total_products = Product.query.count()
+
+    daily_revenue = db.session.query(
+        func.date(Invoice.invoice_date),
+        func.sum(Invoice.total_amount)
+    ).filter(
+        Invoice.invoice_date >= datetime.now() - timedelta(days=7)
+    ).group_by(func.date(Invoice.invoice_date)).all()
+
+    order_status_data = db.session.query(
+        Order.status,
+        func.count(Order.id)
+    ).group_by(Order.status).all()
+
+    return render_template('dashboard.html',
+                           total_orders=total_orders,
+                           monthly_revenue=monthly_revenue,
+                           total_customers=total_customers,
+                           total_products=total_products,
+                           daily_revenue=daily_revenue,
+                           order_status_data=order_status_data)
 
 @app.route('/dashboard')
 @login_required
@@ -296,7 +321,7 @@ def add_customer():
         name = request.form.get('name')
         if not name:
             flash('نام مشتری الزامی است.', 'error')
-            return render_template('customers/add.html')
+            return redirect(url_for('add_customer'))
 
         customer = Customer(
             name=name,
@@ -528,6 +553,96 @@ def orders():
 @login_required
 def add_order():
     if request.method == 'POST':
+        customer_id = request.form.get('customer_id')
+        order_date = jdatetime.datetime.strptime(request.form.get('order_date'), '%Y/%m/%d').togregorian()
+        notes = request.form.get('notes')
+
+        if not customer_id or not order_date:
+            flash('مشتری و تاریخ سفارش الزامی هستند.', 'error')
+            return redirect(url_for('add_order'))
+
+        order = Order(
+            customer_id=customer_id,
+            order_date=order_date,
+            notes=notes,
+            created_by=current_user.id
+        )
+
+        db.session.add(order)
+        db.session.flush()
+
+        product_ids = request.form.getlist('product_id[]')
+        quantities = request.form.getlist('quantity[]')
+        unit_prices = request.form.getlist('unit_price[]')
+
+        for i in range(len(product_ids)):
+            if product_ids[i] and quantities[i] and unit_prices[i]:
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=product_ids[i],
+                    quantity=quantities[i],
+                    unit_price=unit_prices[i],
+                    line_total=int(quantities[i]) * int(unit_prices[i])
+                )
+                db.session.add(order_item)
+
+        db.session.commit()
+        flash('سفارش با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('orders'))
+
+    customers = Customer.query.filter_by(is_active=True).all()
+    products = Product.query.filter_by(is_active=True).all()
+    return render_template('orders/add.html', customers=customers, products=products)
+
+@app.route('/orders/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_order(id):
+    order = Order.query.get_or_404(id)
+    if request.method == 'POST':
+        order.customer_id = request.form.get('customer_id')
+        order.order_date = jdatetime.datetime.strptime(request.form.get('order_date'), '%Y/%m/%d').togregorian()
+        order.notes = request.form.get('notes')
+        order.status = request.form.get('status')
+
+        # Clear existing items
+        OrderItem.query.filter_by(order_id=order.id).delete()
+
+        product_ids = request.form.getlist('product_id[]')
+        quantities = request.form.getlist('quantity[]')
+        unit_prices = request.form.getlist('unit_price[]')
+
+        for i in range(len(product_ids)):
+            if product_ids[i] and quantities[i] and unit_prices[i]:
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=product_ids[i],
+                    quantity=quantities[i],
+                    unit_price=unit_prices[i],
+                    line_total=int(quantities[i]) * int(unit_prices[i])
+                )
+                db.session.add(order_item)
+
+        db.session.commit()
+        flash('سفارش با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('orders'))
+
+    customers = Customer.query.filter_by(is_active=True).all()
+    products = Product.query.filter_by(is_active=True).all()
+    return render_template('orders/edit.html', order=order, customers=customers, products=products)
+
+@app.route('/orders/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_order(id):
+    order = Order.query.get_or_404(id)
+    db.session.delete(order)
+    db.session.commit()
+    flash('سفارش با موفقیت حذف شد.', 'success')
+    return redirect(url_for('orders'))
+
+@app.route('/orders/add', methods=['GET', 'POST'])
+@login_required
+def add_order():
+    if request.method == 'POST':
         # Generate order number
         last_order = Order.query.order_by(Order.id.desc()).first()
         order_number = f"ORD-{(last_order.id + 1) if last_order else 1:06d}"
@@ -613,17 +728,67 @@ def reports():
 @app.route('/reports/sales')
 @login_required
 def reports_sales():
-    return render_template('reports/sales.html')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if not start_date or not end_date:
+        # Default to current month
+        today = jdatetime.datetime.now()
+        start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+
+    start_dt = jdatetime.datetime.strptime(start_date, '%Y-%m-%d').togregorian()
+    end_dt = jdatetime.datetime.strptime(end_date, '%Y-%m-%d').togregorian() + timedelta(days=1)
+
+    # Sales summary
+    sales_data = db.session.query(
+        func.date(Invoice.invoice_date).label('date'),
+        func.sum(Invoice.total_amount).label('total_sales'),
+        func.count(Invoice.id).label('invoice_count')
+    ).filter(
+        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
+    ).group_by(func.date(Invoice.invoice_date)).all()
+
+    # Top customers
+    top_customers = db.session.query(
+        Customer.name,
+        func.sum(Invoice.total_amount).label('total_amount'),
+        func.count(Invoice.id).label('invoice_count')
+    ).join(Invoice).filter(
+        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
+    ).group_by(Customer.id, Customer.name).order_by(
+        func.sum(Invoice.total_amount).desc()
+    ).limit(10).all()
+
+    # Top products
+    top_products = db.session.query(
+        Product.name,
+        func.sum(InvoiceItem.quantity).label('total_quantity'),
+        func.sum(InvoiceItem.line_total).label('total_amount')
+    ).join(InvoiceItem).join(Invoice).filter(
+        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
+    ).group_by(Product.id, Product.name).order_by(
+        func.sum(InvoiceItem.line_total).desc()
+    ).limit(10).all()
+
+    return render_template('reports/sales.html',
+                         sales_data=sales_data,
+                         top_customers=top_customers,
+                         top_products=top_products,
+                         start_date=start_date,
+                         end_date=end_date)
 
 @app.route('/reports/inventory')
 @login_required
 def reports_inventory():
-    return render_template('reports/inventory.html')
+    products = Product.query.all()
+    return render_template('reports/inventory.html', products=products)
 
 @app.route('/reports/customers')
 @login_required
 def reports_customers():
-    return render_template('reports/customers.html')
+    customers = Customer.query.all()
+    return render_template('reports/customers.html', customers=customers)
 
 @app.route('/reports/inventory')
 @login_required
@@ -799,7 +964,7 @@ def init_data():
 @app.route('/admin_panel')
 @login_required
 def admin_panel():
-    if not current_user.is_admin():
+    if not current_user.has_permission('admin_panel'):
         flash('دسترسی مجاز نیست.', 'error')
         return redirect(url_for('dashboard'))
     
@@ -884,7 +1049,71 @@ def update_security_settings():
 @app.route('/payments')
 @login_required
 def payments():
-    return render_template('financial/payments.html')
+    payments = Payment.query.all()
+    return render_template('financial/payments.html', payments=payments)
+
+@app.route('/payments/add', methods=['GET', 'POST'])
+@login_required
+def add_payment():
+    if request.method == 'POST':
+        customer_id = request.form.get('customer_id')
+        invoice_id = request.form.get('invoice_id')
+        amount = request.form.get('amount')
+        payment_date = jdatetime.datetime.strptime(request.form.get('payment_date'), '%Y/%m/%d').togregorian()
+        payment_method = request.form.get('payment_method')
+        notes = request.form.get('notes')
+
+        if not customer_id or not amount or not payment_date or not payment_method:
+            flash('تمام فیلدهای ستاره دار الزامی هستند.', 'error')
+            return redirect(url_for('add_payment'))
+
+        payment = Payment(
+            customer_id=customer_id,
+            invoice_id=invoice_id,
+            amount=amount,
+            payment_date=payment_date,
+            payment_method=payment_method,
+            notes=notes,
+            created_by=current_user.id
+        )
+
+        db.session.add(payment)
+        db.session.commit()
+        flash('پرداخت با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('payments'))
+
+    customers = Customer.query.filter_by(is_active=True).all()
+    invoices = Invoice.query.all()
+    return render_template('financial/add_payment.html', customers=customers, invoices=invoices)
+
+@app.route('/payments/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_payment(id):
+    payment = Payment.query.get_or_404(id)
+    if request.method == 'POST':
+        payment.customer_id = request.form.get('customer_id')
+        payment.invoice_id = request.form.get('invoice_id')
+        payment.amount = request.form.get('amount')
+        payment.payment_date = jdatetime.datetime.strptime(request.form.get('payment_date'), '%Y/%m/%d').togregorian()
+        payment.payment_method = request.form.get('payment_method')
+        payment.notes = request.form.get('notes')
+
+        db.session.commit()
+        flash('اطلاعات پرداخت با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('payments'))
+
+    customers = Customer.query.filter_by(is_active=True).all()
+    invoices = Invoice.query.all()
+    return render_template('financial/edit_payment.html', payment=payment, customers=customers, invoices=invoices)
+
+@app.route('/payments/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_payment(id):
+    payment = Payment.query.get_or_404(id)
+    db.session.delete(payment)
+    db.session.commit()
+    flash('پرداخت با موفقیت حذف شد.', 'success')
+    return redirect(url_for('payments'))
 
 @app.route('/checks')
 @login_required
@@ -1447,11 +1676,137 @@ def delete_user(id):
     flash('کاربر با موفقیت حذف شد.', 'success')
     return redirect(url_for('users'))
 
+@app.route('/users')
+@login_required
+def users():
+    users = User.query.all()
+    return render_template('users/list.html', users=users)
+
+@app.route('/users/add', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role_id = request.form.get('role_id')
+        is_active = 'is_active' in request.form
+
+        if not username or not full_name or not email or not password or not role_id:
+            flash('تمام فیلدهای ستاره دار الزامی هستند.', 'error')
+            return redirect(url_for('add_user'))
+
+        user = User(
+            username=username,
+            full_name=full_name,
+            email=email,
+            role_id=role_id,
+            is_active=is_active
+        )
+        user.set_password(password)
+
+        db.session.add(user)
+        db.session.commit()
+        flash('کاربر با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('users'))
+
+    roles = Role.query.all()
+    return render_template('users/add.html', roles=roles)
+
+@app.route('/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    if request.method == 'POST':
+        user.username = request.form.get('username')
+        user.full_name = request.form.get('full_name')
+        user.email = request.form.get('email')
+        password = request.form.get('password')
+        if password:
+            user.set_password(password)
+        user.role_id = request.form.get('role_id')
+        user.is_active = 'is_active' in request.form
+
+        db.session.commit()
+        flash('اطلاعات کاربر با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('users'))
+
+    roles = Role.query.all()
+    return render_template('users/edit.html', user=user, roles=roles)
+
+@app.route('/users/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user.id == current_user.id:
+        flash('شما نمی توانید خودتان را حذف کنید.', 'error')
+        return redirect(url_for('users'))
+
+    db.session.delete(user)
+    db.session.commit()
+    flash('کاربر با موفقیت حذف شد.', 'success')
+    return redirect(url_for('users'))
+
 @app.route('/roles')
 @login_required
 def roles():
     roles = Role.query.all()
     return render_template('roles/list.html', roles=roles)
+
+@app.route('/roles/add', methods=['GET', 'POST'])
+@login_required
+def add_role():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+
+        if not name:
+            flash('نام نقش الزامی است.', 'error')
+            return redirect(url_for('add_role'))
+
+        role = Role(
+            name=name,
+            description=description
+        )
+
+        db.session.add(role)
+        db.session.commit()
+        flash('نقش با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('roles'))
+
+    return render_template('roles/add.html')
+
+@app.route('/roles/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_role(id):
+    role = Role.query.get_or_404(id)
+    if request.method == 'POST':
+        role.name = request.form.get('name')
+        role.description = request.form.get('description')
+
+        permission_ids = request.form.getlist('permissions')
+        role.permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
+
+        db.session.commit()
+        flash('اطلاعات نقش با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('roles'))
+
+    permissions = Permission.query.all()
+    return render_template('roles/edit.html', role=role, permissions=permissions)
+
+@app.route('/roles/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_role(id):
+    role = Role.query.get_or_404(id)
+    if role.users.count() > 0:
+        flash('امکان حذف نقش وجود ندارد. این نقش به کاربران اختصاص داده شده است.', 'error')
+        return redirect(url_for('roles'))
+
+    db.session.delete(role)
+    db.session.commit()
+    flash('نقش با موفقیت حذف شد.', 'success')
+    return redirect(url_for('roles'))
 
 @app.route('/roles/add', methods=['GET', 'POST'])
 @login_required
@@ -1638,6 +1993,11 @@ def financial_tax_report():
 def reports():
     return render_template('reports/index.html')
 
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('reports/index.html')
+
 @app.route('/financial/reports/receipts-payments')
 @login_required
 def financial_receipts_payments_report():
@@ -1729,3 +2089,71 @@ def reports_tax():
 def accessibility_demo():
     """Demonstrate accessibility and UX improvements based on code review feedback"""
     return render_template('accessibility_demo.html')
+
+@app.route('/raw_materials')
+@login_required
+def raw_materials():
+    raw_materials = RawMaterial.query.all()
+    return render_template('raw_materials/list.html', raw_materials=raw_materials)
+
+@app.route('/raw_materials/add', methods=['GET', 'POST'])
+@login_required
+def add_raw_material():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        unit = request.form.get('unit')
+        current_stock = request.form.get('current_stock')
+        min_stock_level = request.form.get('min_stock_level')
+        max_stock_level = request.form.get('max_stock_level')
+
+        if not name or not unit or not current_stock or not min_stock_level or not max_stock_level:
+            flash('تمام فیلدها الزامی هستند.', 'error')
+            return redirect(url_for('add_raw_material'))
+
+        raw_material = RawMaterial(
+            name=name,
+            description=description,
+            unit=unit,
+            current_stock=current_stock,
+            min_stock_level=min_stock_level,
+            max_stock_level=max_stock_level
+        )
+
+        db.session.add(raw_material)
+        db.session.commit()
+        flash('ماده اولیه با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('raw_materials'))
+
+    return render_template('raw_materials/add.html')
+
+@app.route('/raw_materials/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_raw_material(id):
+    raw_material = RawMaterial.query.get_or_404(id)
+    if request.method == 'POST':
+        raw_material.name = request.form.get('name')
+        raw_material.description = request.form.get('description')
+        raw_material.unit = request.form.get('unit')
+        raw_material.current_stock = request.form.get('current_stock')
+        raw_material.min_stock_level = request.form.get('min_stock_level')
+        raw_material.max_stock_level = request.form.get('max_stock_level')
+
+        db.session.commit()
+        flash('اطلاعات ماده اولیه با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('raw_materials'))
+
+    return render_template('raw_materials/edit.html', raw_material=raw_material)
+
+@app.route('/raw_materials/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_raw_material(id):
+    raw_material = RawMaterial.query.get_or_404(id)
+    if raw_material.products:
+        flash('امکان حذف ماده اولیه وجود ندارد. این ماده اولیه در محصولات استفاده شده است.', 'error')
+        return redirect(url_for('raw_materials'))
+
+    db.session.delete(raw_material)
+    db.session.commit()
+    flash('ماده اولیه با موفقیت حذف شد.', 'success')
+    return redirect(url_for('raw_materials'))
