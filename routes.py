@@ -44,41 +44,6 @@ def logout():
     flash('با موفقیت خارج شدید.', 'success')
     return redirect(url_for('login'))
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    total_orders = Order.query.count()
-    monthly_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
-        and_(Invoice.invoice_date >= datetime.now().replace(day=1), Invoice.status == 'paid')
-    ).scalar() or 0
-    total_customers = Customer.query.count()
-    total_products = Product.query.count()
-
-    daily_revenue = [
-        ('1403/01/01', 100000),
-        ('1403/01/02', 150000),
-        ('1403/01/03', 120000),
-        ('1403/01/04', 180000),
-        ('1403/01/05', 200000),
-        ('1403/01/06', 170000),
-        ('1403/01/07', 220000),
-    ]
-
-    order_status_data = [
-        ('در انتظار', 5),
-        ('تایید شده', 10),
-        ('در حال تولید', 3),
-        ('تکمیل شده', 20),
-        ('لغو شده', 2),
-    ]
-
-    return render_template('dashboard.html',
-                           total_orders=total_orders,
-                           monthly_revenue=monthly_revenue,
-                           total_customers=total_customers,
-                           total_products=total_products,
-                           daily_revenue=daily_revenue,
-                           order_status_data=order_status_data)
 
 @app.route('/dashboard')
 @login_required
@@ -555,86 +520,7 @@ def orders():
     return render_template('orders/list.html', orders=orders, 
                          status=status, customer_id=customer_id, customers=customers)
 
-@app.route('/orders/add', methods=['GET', 'POST'])
-@login_required
-def add_order():
-    if request.method == 'POST':
-        customer_id = request.form.get('customer_id')
-        order_date = jdatetime.datetime.strptime(request.form.get('order_date'), '%Y/%m/%d').togregorian()
-        notes = request.form.get('notes')
 
-        if not customer_id or not order_date:
-            flash('مشتری و تاریخ سفارش الزامی هستند.', 'error')
-            return redirect(url_for('add_order'))
-
-        order = Order(
-            customer_id=customer_id,
-            order_date=order_date,
-            notes=notes,
-            created_by=current_user.id
-        )
-
-        db.session.add(order)
-        db.session.flush()
-
-        product_ids = request.form.getlist('product_id[]')
-        quantities = request.form.getlist('quantity[]')
-        unit_prices = request.form.getlist('unit_price[]')
-
-        for i in range(len(product_ids)):
-            if product_ids[i] and quantities[i] and unit_prices[i]:
-                order_item = OrderItem(
-                    order_id=order.id,
-                    product_id=product_ids[i],
-                    quantity=quantities[i],
-                    unit_price=unit_prices[i],
-                    line_total=int(quantities[i]) * int(unit_prices[i])
-                )
-                db.session.add(order_item)
-
-        db.session.commit()
-        flash('سفارش با موفقیت اضافه شد.', 'success')
-        return redirect(url_for('orders'))
-
-    customers = Customer.query.filter_by(is_active=True).all()
-    products = Product.query.filter_by(is_active=True).all()
-    return render_template('orders/add.html', customers=customers, products=products)
-
-@app.route('/orders/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_order(id):
-    order = Order.query.get_or_404(id)
-    if request.method == 'POST':
-        order.customer_id = request.form.get('customer_id')
-        order.order_date = jdatetime.datetime.strptime(request.form.get('order_date'), '%Y/%m/%d').togregorian()
-        order.notes = request.form.get('notes')
-        order.status = request.form.get('status')
-
-        # Clear existing items
-        OrderItem.query.filter_by(order_id=order.id).delete()
-
-        product_ids = request.form.getlist('product_id[]')
-        quantities = request.form.getlist('quantity[]')
-        unit_prices = request.form.getlist('unit_price[]')
-
-        for i in range(len(product_ids)):
-            if product_ids[i] and quantities[i] and unit_prices[i]:
-                order_item = OrderItem(
-                    order_id=order.id,
-                    product_id=product_ids[i],
-                    quantity=quantities[i],
-                    unit_price=unit_prices[i],
-                    line_total=int(quantities[i]) * int(unit_prices[i])
-                )
-                db.session.add(order_item)
-
-        db.session.commit()
-        flash('سفارش با موفقیت بروزرسانی شد.', 'success')
-        return redirect(url_for('orders'))
-
-    customers = Customer.query.filter_by(is_active=True).all()
-    products = Product.query.filter_by(is_active=True).all()
-    return render_template('orders/edit.html', order=order, customers=customers, products=products)
 
 @app.route('/orders/<int:id>/delete', methods=['POST'])
 @login_required
@@ -726,10 +612,6 @@ def invoices():
                          search='', from_date='', to_date='')
 
 # Reports Routes
-@app.route('/reports')
-@login_required
-def reports():
-    return render_template('reports/index.html')
 
 @app.route('/reports/sales')
 @login_required
@@ -784,11 +666,6 @@ def reports_sales():
                          start_date=start_date,
                          end_date=end_date)
 
-@app.route('/reports/inventory')
-@login_required
-def reports_inventory():
-    products = Product.query.all()
-    return render_template('reports/inventory.html', products=products)
 
 @app.route('/inventory')
 @login_required
@@ -796,11 +673,6 @@ def inventory():
     products = Product.query.all()
     return render_template('inventory/list.html', products=products)
 
-@app.route('/reports/customers')
-@login_required
-def reports_customers():
-    customers = Customer.query.all()
-    return render_template('reports/customers.html', customers=customers)
 
 @app.route('/reports/inventory')
 @login_required
@@ -835,58 +707,6 @@ def reports_customers():
 def reports_financial():
     return render_template('reports/financial.html')
 
-@app.route('/reports/sales')
-@login_required
-def reports_sales():
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-    
-    if not start_date or not end_date:
-        # Default to current month
-        today = jdatetime.datetime.now()
-        start_date = today.replace(day=1).strftime('%Y-%m-%d')
-        end_date = today.strftime('%Y-%m-%d')
-    
-    start_dt = jdatetime.datetime.strptime(start_date, '%Y-%m-%d').togregorian()
-    end_dt = jdatetime.datetime.strptime(end_date, '%Y-%m-%d').togregorian() + timedelta(days=1)
-    
-    # Sales summary
-    sales_data = db.session.query(
-        func.date(Invoice.invoice_date).label('date'),
-        func.sum(Invoice.total_amount).label('total_sales'),
-        func.count(Invoice.id).label('invoice_count')
-    ).filter(
-        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
-    ).group_by(func.date(Invoice.invoice_date)).all()
-    
-    # Top customers
-    top_customers = db.session.query(
-        Customer.name,
-        func.sum(Invoice.total_amount).label('total_amount'),
-        func.count(Invoice.id).label('invoice_count')
-    ).join(Invoice).filter(
-        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
-    ).group_by(Customer.id, Customer.name).order_by(
-        func.sum(Invoice.total_amount).desc()
-    ).limit(10).all()
-    
-    # Top products
-    top_products = db.session.query(
-        Product.name,
-        func.sum(InvoiceItem.quantity).label('total_quantity'),
-        func.sum(InvoiceItem.line_total).label('total_amount')
-    ).join(InvoiceItem).join(Invoice).filter(
-        and_(Invoice.invoice_date >= start_dt, Invoice.invoice_date < end_dt)
-    ).group_by(Product.id, Product.name).order_by(
-        func.sum(InvoiceItem.line_total).desc()
-    ).limit(10).all()
-    
-    return render_template('reports/sales.html',
-                         sales_data=sales_data,
-                         top_customers=top_customers,
-                         top_products=top_products,
-                         start_date=start_date,
-                         end_date=end_date)
 
 @app.route('/reports/production')
 @login_required 
@@ -1468,40 +1288,7 @@ def view_order(id):
     order = Order.query.get_or_404(id)
     return render_template('orders/view.html', order=order)
 
-@app.route('/orders/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_order(id):
-    order = Order.query.get_or_404(id)
-    
-    if request.method == 'POST':
-        order.customer_id = request.form.get('customer_id')
-        order.delivery_date = jdatetime.datetime.strptime(request.form.get('delivery_date'), '%Y/%m/%d').togregorian() if request.form.get('delivery_date') else None
-        order.notes = request.form.get('notes')
-        order.status = request.form.get('status')
-        
-        db.session.commit()
-        flash('سفارش با موفقیت بروزرسانی شد.', 'success')
-        return redirect(url_for('orders'))
-    
-    customers = Customer.query.filter_by(is_active=True).all()
-    return render_template('orders/edit.html', order=order, customers=customers)
 
-@app.route('/orders/<int:id>/delete', methods=['POST'])
-@login_required
-def delete_order(id):
-    order = Order.query.get_or_404(id)
-    
-    try:
-        # Delete order items first
-        OrderItem.query.filter_by(order_id=id).delete()
-        db.session.delete(order)
-        db.session.commit()
-        flash('سفارش با موفقیت حذف شد.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash('خطا در حذف سفارش.', 'error')
-    
-    return redirect(url_for('orders'))
 
 # Admin Panel Routes
 @app.route('/admin')
@@ -1688,106 +1475,13 @@ def delete_user(id):
     flash('کاربر با موفقیت حذف شد.', 'success')
     return redirect(url_for('users'))
 
-@app.route('/users')
-@login_required
-def users():
-    users = User.query.all()
-    return render_template('users/list.html', users=users)
-
-@app.route('/users/add', methods=['GET', 'POST'])
-@login_required
-def add_user():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        full_name = request.form.get('full_name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        role_id = request.form.get('role_id')
-        is_active = 'is_active' in request.form
-
-        if not username or not full_name or not email or not password or not role_id:
-            flash('تمام فیلدهای ستاره دار الزامی هستند.', 'error')
-            return redirect(url_for('add_user'))
-
-        user = User(
-            username=username,
-            full_name=full_name,
-            email=email,
-            role_id=role_id,
-            is_active=is_active
-        )
-        user.set_password(password)
-
-        db.session.add(user)
-        db.session.commit()
-        flash('کاربر با موفقیت اضافه شد.', 'success')
-        return redirect(url_for('users'))
-
-    roles = Role.query.all()
-    return render_template('users/add.html', roles=roles)
-
-@app.route('/users/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_user(id):
-    user = User.query.get_or_404(id)
-    if request.method == 'POST':
-        user.username = request.form.get('username')
-        user.full_name = request.form.get('full_name')
-        user.email = request.form.get('email')
-        password = request.form.get('password')
-        if password:
-            user.set_password(password)
-        user.role_id = request.form.get('role_id')
-        user.is_active = 'is_active' in request.form
-
-        db.session.commit()
-        flash('اطلاعات کاربر با موفقیت بروزرسانی شد.', 'success')
-        return redirect(url_for('users'))
-
-    roles = Role.query.all()
-    return render_template('users/edit.html', user=user, roles=roles)
-
-@app.route('/users/<int:id>/delete', methods=['POST'])
-@login_required
-def delete_user(id):
-    user = User.query.get_or_404(id)
-    if user.id == current_user.id:
-        flash('شما نمی توانید خودتان را حذف کنید.', 'error')
-        return redirect(url_for('users'))
-
-    db.session.delete(user)
-    db.session.commit()
-    flash('کاربر با موفقیت حذف شد.', 'success')
-    return redirect(url_for('users'))
-
 @app.route('/roles')
 @login_required
 def roles():
     roles = Role.query.all()
     return render_template('roles/list.html', roles=roles)
 
-@app.route('/roles/add', methods=['GET', 'POST'])
-@login_required
-def add_role():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        description = request.form.get('description')
 
-        if not name:
-            flash('نام نقش الزامی است.', 'error')
-            return redirect(url_for('add_role'))
-
-        role = Role(
-            name=name,
-            description=description
-        )
-
-        db.session.add(role)
-        db.session.commit()
-        flash('نقش با موفقیت اضافه شد.', 'success')
-        return redirect(url_for('roles'))
-
-    return render_template('roles/add.html')
 
 @app.route('/roles/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1820,28 +1514,7 @@ def delete_role(id):
     flash('نقش با موفقیت حذف شد.', 'success')
     return redirect(url_for('roles'))
 
-@app.route('/roles/add', methods=['GET', 'POST'])
-@login_required
-def add_role():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        description = request.form.get('description')
 
-        if not name:
-            flash('نام نقش الزامی است.', 'error')
-            return redirect(url_for('add_role'))
-
-        role = Role(
-            name=name,
-            description=description
-        )
-
-        db.session.add(role)
-        db.session.commit()
-        flash('نقش با موفقیت اضافه شد.', 'success')
-        return redirect(url_for('roles'))
-
-    return render_template('roles/add.html')
 
 @app.route('/roles/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -2000,15 +1673,6 @@ def financial_tax_report():
                          from_date=from_date,
                          to_date=to_date)
 
-@app.route('/reports')
-@login_required
-def reports():
-    return render_template('reports/index.html')
-
-@app.route('/reports')
-@login_required
-def reports():
-    return render_template('reports/index.html')
 
 @app.route('/financial/reports/receipts-payments')
 @login_required

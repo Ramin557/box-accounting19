@@ -1,3 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from app import Base
 
-db = SQLAlchemy()
+db = SQLAlchemy(model_class=Base)
+
+

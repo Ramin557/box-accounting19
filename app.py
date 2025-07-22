@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.DEBUG)
 class Base(DeclarativeBase):
     pass
 
-from extensions import db
+db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
@@ -65,9 +65,8 @@ def load_user(user_id):
 import models  # noqa: F401
 
 with app.app_context():
-    # Only create tables if not using migrations
-    # db.create_all() - Commented out because we're using Flask-Migrate
-    pass
+    # Create all tables
+    db.create_all()
 
 @app.cli.command("seed-db")
 def seed_db_command():
@@ -120,3 +119,4 @@ def seed_db_command():
     print('   نام کاربری: admin')
     print('   رمز عبور: admin123')
     print('✅ سیستم آماده است!')
+
