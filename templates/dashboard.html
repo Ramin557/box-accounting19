@@ -16,49 +16,49 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="total_orders" style="color: #ffffff;">{{ total_orders }}</div>
-                    <div class="stat-label" style="color: #ffffff;">کل سفارشات</div>
+                    <div class="stat-number" data-stat="total_orders">{{ total_orders }}</div>
+                    <div class="stat-label">کل سفارشات</div>
                 </div>
-                <i class="fas fa-shopping-cart fa-2x opacity-50" style="color: #ffffff;"></i>
+                <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="monthly_orders" style="color: #ffffff;">{{ monthly_orders }}</div>
-                    <div class="stat-label" style="color: #ffffff;">سفارشات ماه جاری</div>
+                    <div class="stat-number" data-stat="monthly_orders">{{ monthly_orders }}</div>
+                    <div class="stat-label">سفارشات ماه جاری</div>
                 </div>
-                <i class="fas fa-calendar fa-2x opacity-50" style="color: #ffffff;"></i>
+                <i class="fas fa-calendar fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="pending_orders" style="color: #ffffff;">{{ pending_orders }}</div>
-                    <div class="stat-label" style="color: #ffffff;">سفارشات در انتظار</div>
+                    <div class="stat-number" data-stat="pending_orders">{{ pending_orders }}</div>
+                    <div class="stat-label">سفارشات در انتظار</div>
                 </div>
-                <i class="fas fa-clock fa-2x opacity-50" style="color: #ffffff;"></i>
+                <i class="fas fa-clock fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="low_stock_products" style="color: #ffffff;">{{ low_stock_products }}</div>
-                    <div class="stat-label" style="color: #ffffff;">کالاهای کم موجود</div>
+                    <div class="stat-number" data-stat="low_stock_products">{{ low_stock_products }}</div>
+                    <div class="stat-label">کالاهای کم موجود</div>
                 </div>
-                <i class="fas fa-exclamation-triangle fa-2x opacity-50" style="color: #ffffff;"></i>
+                <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
@@ -67,55 +67,55 @@
 <!-- Enhanced Financial Cards -->
 <div class="row mt-4">
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="monthly_revenue" style="color: #ffffff;">{{ "{:,.0f}".format(monthly_revenue) }}</div>
-                    <div class="stat-label" style="color: #ffffff;">درآمد ماه جاری (تومان)</div>
+                    <div class="stat-number" data-stat="monthly_revenue">{{ "{:,.0f}".format(monthly_revenue) }}</div>
+                    <div class="stat-label">درآمد ماه جاری (تومان)</div>
                     {% if revenue_growth != 0 %}
-                    <div class="small text-light mt-1" style="color: #ffffff;">
-                        <i class="fas fa-{{ 'arrow-up' if revenue_growth > 0 else 'arrow-down' }}" style="color: #ffffff;"></i>
+                    <div class="small text-light mt-1">
+                        <i class="fas fa-{{ 'arrow-up' if revenue_growth > 0 else 'arrow-down' }}"></i>
                         {{ "{:.1f}".format(abs(revenue_growth)) }}% نسبت به ماه قبل
                     </div>
                     {% endif %}
                 </div>
-                <i class="fas fa-coins fa-2x opacity-50" style="color: #ffffff;"></i>
+                <i class="fas fa-coins fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #333333; border: 1px solid rgba(0,0,0,0.1);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="outstanding_invoices" style="color: #333333;">{{ "{:,.0f}".format(outstanding_invoices) }}</div>
-                    <div class="stat-label" style="color: #333333;">مطالبات معوق (تومان)</div>
+                    <div class="stat-number" data-stat="outstanding_invoices">{{ "{:,.0f}".format(outstanding_invoices) }}</div>
+                    <div class="stat-label">مطالبات معوق (تومان)</div>
                 </div>
-                <i class="fas fa-exclamation-circle fa-2x opacity-50" style="color: #333333;"></i>
+                <i class="fas fa-exclamation-circle fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333333; border: 1px solid rgba(0,0,0,0.1);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="total_customers" style="color: #333333;">{{ total_customers }}</div>
-                    <div class="stat-label" style="color: #333333;">تعداد مشتریان</div>
+                    <div class="stat-number" data-stat="total_customers">{{ total_customers }}</div>
+                    <div class="stat-label">تعداد مشتریان</div>
                 </div>
-                <i class="fas fa-users fa-2x opacity-50" style="color: #333333;"></i>
+                <i class="fas fa-users fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333333; border: 1px solid rgba(0,0,0,0.1);">
+        <div class="stat-card">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="stat-number" data-stat="total_products" style="color: #333333;">{{ total_products }}</div>
-                    <div class="stat-label" style="color: #333333;">تعداد محصولات</div>
+                    <div class="stat-number" data-stat="total_products">{{ total_products }}</div>
+                    <div class="stat-label">تعداد محصولات</div>
                 </div>
-                <i class="fas fa-box fa-2x opacity-50" style="color: #333333;"></i>
+                <i class="fas fa-box fa-2x opacity-50"></i>
             </div>
         </div>
     </div>
@@ -198,8 +198,8 @@
     </div>
     
     <div class="col-md-6">
-        <div class="card" style="border: 2px solid #dc3545; background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);">
-            <div class="card-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border-bottom: 1px solid #dc3545;">
+        <div class="card financial-status-card">
+            <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-chart-area"></i>
                     وضعیت مالی
@@ -208,25 +208,25 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-3 text-center mb-3">
-                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                        <div class="p-3 rounded">
                             <h4 class="mb-1">{{ "{:,.0f}".format(monthly_revenue) }}</h4>
                             <small>کل درآمد</small>
                         </div>
                     </div>
                     <div class="col-3 text-center mb-3">
-                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                        <div class="p-3 rounded">
                             <h4 class="mb-1">{{ "{:,.0f}".format(monthly_revenue * 0.7) }}</h4>
                             <small>کل هزینه</small>
                         </div>
                     </div>
                     <div class="col-3 text-center mb-3">
-                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white;">
+                        <div class="p-3 rounded">
                             <h4 class="mb-1">{{ "{:,.0f}".format(monthly_revenue * 0.3) }}</h4>
                             <small>سود/زیان خالص</small>
                         </div>
                     </div>
                     <div class="col-3 text-center mb-3">
-                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
+                        <div class="p-3 rounded">
                             <h4 class="mb-1">30%</h4>
                             <small>حاشیه سود</small>
                         </div>
