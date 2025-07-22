@@ -28,7 +28,7 @@ migrate = Migrate()
 
 # Create the app
 app = Flask(__name__, instance_relative_config=True)
-app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-for-development")
+app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-for-development")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Ensure the instance folder exists
