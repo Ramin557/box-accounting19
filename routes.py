@@ -47,6 +47,11 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
     # Get dashboard statistics
     today = jdatetime.datetime.now()
     current_month_start = today.replace(day=1).togregorian()
@@ -274,7 +279,8 @@ def customers():
         query = query.filter(or_(
             Customer.name.contains(search),
             Customer.company_name.contains(search),
-            Customer.phone.contains(search)
+            Customer.phone.contains(search),
+            Customer.email.contains(search)
         ))
     
     customers = query.order_by(Customer.created_at.desc()).paginate(
@@ -287,8 +293,13 @@ def customers():
 @login_required
 def add_customer():
     if request.method == 'POST':
+        name = request.form.get('name')
+        if not name:
+            flash('نام مشتری الزامی است.', 'error')
+            return render_template('customers/add.html')
+
         customer = Customer(
-            name=request.form.get('name'),
+            name=name,
             company_name=request.form.get('company_name'),
             phone=request.form.get('phone'),
             mobile=request.form.get('mobile'),
@@ -598,6 +609,21 @@ def invoices():
 @login_required
 def reports():
     return render_template('reports/index.html')
+
+@app.route('/reports/sales')
+@login_required
+def reports_sales():
+    return render_template('reports/sales.html')
+
+@app.route('/reports/inventory')
+@login_required
+def reports_inventory():
+    return render_template('reports/inventory.html')
+
+@app.route('/reports/customers')
+@login_required
+def reports_customers():
+    return render_template('reports/customers.html')
 
 @app.route('/reports/inventory')
 @login_required
@@ -1349,6 +1375,138 @@ def admin_delete_user(id):
     
     return redirect(url_for('admin_users'))
 
+@app.route('/users')
+@login_required
+def users():
+    users = User.query.all()
+    return render_template('users/list.html', users=users)
+
+@app.route('/users/add', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role_id = request.form.get('role_id')
+        is_active = 'is_active' in request.form
+
+        if not username or not full_name or not email or not password or not role_id:
+            flash('تمام فیلدهای ستاره دار الزامی هستند.', 'error')
+            return redirect(url_for('add_user'))
+
+        user = User(
+            username=username,
+            full_name=full_name,
+            email=email,
+            role_id=role_id,
+            is_active=is_active
+        )
+        user.set_password(password)
+
+        db.session.add(user)
+        db.session.commit()
+        flash('کاربر با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('users'))
+
+    roles = Role.query.all()
+    return render_template('users/add.html', roles=roles)
+
+@app.route('/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    if request.method == 'POST':
+        user.username = request.form.get('username')
+        user.full_name = request.form.get('full_name')
+        user.email = request.form.get('email')
+        password = request.form.get('password')
+        if password:
+            user.set_password(password)
+        user.role_id = request.form.get('role_id')
+        user.is_active = 'is_active' in request.form
+
+        db.session.commit()
+        flash('اطلاعات کاربر با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('users'))
+
+    roles = Role.query.all()
+    return render_template('users/edit.html', user=user, roles=roles)
+
+@app.route('/users/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user.id == current_user.id:
+        flash('شما نمی توانید خودتان را حذف کنید.', 'error')
+        return redirect(url_for('users'))
+
+    db.session.delete(user)
+    db.session.commit()
+    flash('کاربر با موفقیت حذف شد.', 'success')
+    return redirect(url_for('users'))
+
+@app.route('/roles')
+@login_required
+def roles():
+    roles = Role.query.all()
+    return render_template('roles/list.html', roles=roles)
+
+@app.route('/roles/add', methods=['GET', 'POST'])
+@login_required
+def add_role():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+
+        if not name:
+            flash('نام نقش الزامی است.', 'error')
+            return redirect(url_for('add_role'))
+
+        role = Role(
+            name=name,
+            description=description
+        )
+
+        db.session.add(role)
+        db.session.commit()
+        flash('نقش با موفقیت اضافه شد.', 'success')
+        return redirect(url_for('roles'))
+
+    return render_template('roles/add.html')
+
+@app.route('/roles/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_role(id):
+    role = Role.query.get_or_404(id)
+    if request.method == 'POST':
+        role.name = request.form.get('name')
+        role.description = request.form.get('description')
+
+        permission_ids = request.form.getlist('permissions')
+        role.permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
+
+        db.session.commit()
+        flash('اطلاعات نقش با موفقیت بروزرسانی شد.', 'success')
+        return redirect(url_for('roles'))
+
+    permissions = Permission.query.all()
+    return render_template('roles/edit.html', role=role, permissions=permissions)
+
+@app.route('/roles/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_role(id):
+    role = Role.query.get_or_404(id)
+    if role.users.count() > 0:
+        flash('امکان حذف نقش وجود ندارد. این نقش به کاربران اختصاص داده شده است.', 'error')
+        return redirect(url_for('roles'))
+
+    db.session.delete(role)
+    db.session.commit()
+    flash('نقش با موفقیت حذف شد.', 'success')
+    return redirect(url_for('roles'))
+
 # Settings Routes
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -1474,6 +1632,11 @@ def financial_tax_report():
                          total_sales=total_sales,
                          from_date=from_date,
                          to_date=to_date)
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('reports/index.html')
 
 @app.route('/financial/reports/receipts-payments')
 @login_required
