@@ -476,4 +476,9 @@ window.hideLoading = hideLoading;
 window.formatCurrency = formatCurrency;
 window.formatPersianNumber = formatPersianNumber;
 
+function confirmDelete(url) {
+    if (confirm("آیا از حذف این مورد اطمینان دارید؟")) {
+        window.location.href = url;
+    }
+}
 // End of file

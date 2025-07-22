@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 272a36f2bd64
+Revision ID: 8b40a4c84e48
 Revises:
-Create Date: 2025-07-22 07:47:25.650761
+Create Date: 2025-07-22 12:07:40.881689
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '272a36f2bd64'
+revision = '8b40a4c84e48'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -69,6 +69,7 @@ def upgrade():
     sa.Column('material_type', sa.String(length=64), nullable=True),
     sa.Column('cost_price', sa.Numeric(precision=15, scale=2), nullable=True),
     sa.Column('selling_price', sa.Numeric(precision=15, scale=2), nullable=True),
+    sa.Column('cost', sa.Numeric(precision=15, scale=2), nullable=True),
     sa.Column('current_stock', sa.Integer(), nullable=True),
     sa.Column('min_stock_level', sa.Integer(), nullable=True),
     sa.Column('max_stock_level', sa.Integer(), nullable=True),
@@ -82,6 +83,7 @@ def upgrade():
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('unit', sa.String(length=20), nullable=True),
+    sa.Column('cost_price', sa.Numeric(precision=15, scale=2), nullable=True),
     sa.Column('current_stock', sa.Integer(), nullable=True),
     sa.Column('min_stock_level', sa.Integer(), nullable=True),
     sa.Column('max_stock_level', sa.Integer(), nullable=True),
