@@ -217,6 +217,31 @@ def migrate_existing_users():
     print(f"تعداد {migrated_count} کاربر به سیستم جدید منتقل شدند.")
     return migrated_count
 
+def create_sample_users():
+    """Create sample users for demonstration purposes"""
+    if User.query.filter(User.username != 'admin').count() > 0:
+        return
+
+    sales_role = Role.query.filter_by(name='sales_person').first()
+    warehouse_role = Role.query.filter_by(name='warehouse_manager').first()
+
+    sample_users = [
+        {'username': 'ali_rezaei', 'full_name': 'علی رضایی', 'email': 'ali@example.com', 'password': 'password', 'role': sales_role},
+        {'username': 'maryam_ahmadi', 'full_name': 'مریم احمدی', 'email': 'maryam@example.com', 'password': 'password', 'role': warehouse_role},
+    ]
+
+    for user_data in sample_users:
+        user = User(
+            username=user_data['username'],
+            full_name=user_data['full_name'],
+            email=user_data['email'],
+            role_id=user_data['role'].id if user_data['role'] else None
+        )
+        user.set_password(user_data['password'])
+        db.session.add(user)
+
+    db.session.commit()
+
 def init_rbac_system():
     """Initialize the complete RBAC system"""
     print("در حال راه‌اندازی سیستم کنترل دسترسی...")
@@ -239,6 +264,9 @@ def init_rbac_system():
         # Migrate existing users
         migrated_users = migrate_existing_users()
         
+        # Create sample users
+        create_sample_users()
+
         # Final commit
         db.session.commit()
         
