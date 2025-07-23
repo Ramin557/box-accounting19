@@ -47,4 +47,4 @@ def rbac_create_role():
             name=request.form.get('name'),
             display_name=request.form.get('display_name'),
             description=request.form.get('description'),
-            is_system_role=False
+            is_system_role=False)

@@ -10,3 +10,16 @@ psycopg2-binary>=2.9.0
 sqlalchemy>=2.0.41
 python-dotenv>=1.1.1
 flask-migrate>=4.1.0
+click
+flask
+flask-login
+flask-migrate
+flask-sqlalchemy
+flask-wtf
+jdatetime
+psycopg2-binary
+python-dateutil
+python-dotenv
+sqlalchemy
+werkzeug
+wtforms
